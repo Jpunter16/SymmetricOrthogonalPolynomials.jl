@@ -49,8 +49,8 @@ end
 
 cuberepresentation(n) = Representation([cubegen1(n), cubegen2(n), cubegen3(n)])
 
-function _cube_filter!(ret, p, n, j)
-    λ = multiplicities(cuberepresentation(n))
+function _cube_filter!(ret, ρ, p, n, j)
+    λ = multiplicities(ρ)
     kys = sort!(collect(keys(λ)))
     ind = 0
     for k in kys
@@ -66,8 +66,8 @@ function _cube_filter!(ret, p, n, j)
     ret
 end
 
-function _cube_filter!(ret, p, n)
-    λ = multiplicities(cuberepresentation(n))
+function _cube_filter!(ret, ρ, p, n)
+    λ = multiplicities(ρ)
     kys = sort!(collect(keys(λ)))
     ind = 0
     for k in kys
@@ -89,7 +89,7 @@ function cube_filter((p, s), N, j...)
     for n = 1:N
         M = sum(1:n)
         if s == isodd(n)
-            _cube_filter!(view(ret, ind+1:ind+M), p, n, j...)
+            _cube_filter!(view(ret, ind+1:ind+M), cuberepresentation(n), p, n, j...)
         end
         ind += M
     end

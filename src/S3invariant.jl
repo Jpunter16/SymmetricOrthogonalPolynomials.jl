@@ -4,11 +4,13 @@
 # The first few are 
 # 1
 # -----
-# P_1(x) + P_1(y)+P_1(z)
+# P_1(x) + P_1(y)+ P_1(z)
 # ----
 # P_2(x) + P_2(y)+P_2(z)
 # 2P_1(x)P_1(y)+2P_1(x)P_1(z)+2P_1(y)P_1(z)
 ########
+
+include("partitions.jl")
 
 struct S3Invariant{T,B} <: MultivariateOrthogonalPolynomial{3,T}
     basis::B
@@ -18,52 +20,61 @@ S3Invariant(B::AbstractQuasiMatrix{T}) where T = S3Invariant{T, typeof(B)}(B)
 S3Invariant() = S3Invariant(Normalized(Legendre()))
 
 
-#continue here
-S3axis(K) = BlockedOneTo((2:(K+1)) .^ 2 .÷ 4)
-axes(::S3Invariant) = (Inclusion(ChebyshevInterval() × ChebyshevInterval()), dihedralaxis(∞))
+S3axis(K) = BlockedOneTo(round.((4:(K+4)) .^ 2 ./ 12))
+axes(::S3Invariant) = (Inclusion(ChebyshevInterval() × ChebyshevInterval() × ChebyshevInterval()), S3axis(∞))
 
 
 
 
-function getindex(Q::S3Invariant, 𝐱::SVector{2}, Kk::BlockIndex{1})
-    x,y = 𝐱
+function getindex(Q::S3Invariant, 𝐱::SVector{3}, Kk::BlockIndex{1})
+    x,y,z = 𝐱
     K,k = block(Kk), blockindex(Kk)
-    ℓ = 2*(Int(K)-k)
-    μ = 2*(k-1)
-    (Q.basis[x,ℓ+1]Q.basis[y,μ+1]+Q.basis[x,μ+1]Q.basis[y,ℓ+1])/sqrt(2 + 2*(ℓ == μ)) # scaling is to ensure unitary change-of-basis
+    ℓ,μ,ρ= partitions(K,3,0,K)[k]
+    P=Q.basis
+
+    P[x,ℓ+1]*P[y,μ+1]*P[z, ρ+1]+
+    P[x,ℓ+1]*P[z,μ+1]*P[y, ρ+1]+
+    P[z,ℓ+1]*P[y,μ+1]*P[x, ρ+1]+
+    P[y,ℓ+1]*P[x,μ+1]*P[z, ρ+1]+
+    P[z,ℓ+1]*P[x,μ+1]*P[y, ρ+1]+
+    P[y,ℓ+1]*P[z,μ+1]*P[x, ρ+1]
+
+    #Ask about normalization
+
+    #(Q.basis[x,ℓ+1]Q.basis[y,μ+1]+Q.basis[x,μ+1]Q.basis[y,ℓ+1])/sqrt(2 + 2*(ℓ == μ)) # scaling is to ensure unitary change-of-basis
 end
 
-getindex(Q::S3Invariant, 𝐱::SVector{2}, k::Int) = Q[𝐱,findblockindex(axes(Q,2),k)]
+getindex(Q::S3Invariant, 𝐱::SVector{3}, k::Int) = Q[𝐱,findblockindex(axes(Q,2),k)]
 
-getindex(Q::S3Invariant, 𝐱::SVector{2}, J::Block{1}) = [Q[𝐱,J[j]] for j = 1:length(axes(Q,2)[J])]
-getindex(Q::S3Invariant, 𝐱::SVector{2}, JR::BlockOneTo) = mortar([Q[𝐱,J] for J in JR])
+getindex(Q::S3Invariant, 𝐱::SVector{3}, J::Block{1}) = [Q[𝐱,J[j]] for j = 1:length(axes(Q,2)[J])]
+getindex(Q::S3Invariant, 𝐱::SVector{3}, JR::BlockOneTo) = mortar([Q[𝐱,J] for J in JR])
 
-struct DihedralKronVector{T,D<:AbstractVector{T}} <: AbstractBlockVector{T}
+struct S3KronVector{T,D<:AbstractVector{T}} <: AbstractBlockVector{T}
     d::D
 end
 
-axes(::DihedralKronVector) = (dihedralaxis(∞),)
-size(::DihedralKronVector) = (ℵ₀,)
+axes(::S3KronVector) = (S3axis(∞),)
+size(::S3KronVector) = (ℵ₀,)
 
-
-function getindex(D::DihedralKronVector, K::Block{1})
+#=
+function getindex(D::S3KronVector, K::Block{1})
     K̃ = Int(K)
     D.d[1:2:K̃] .* D.d[2K̃-1:-2:K̃]    
 end
-getindex(D::DihedralKronVector, Kk::BlockIndex{1}) = D[block(Kk)][blockindex(Kk)]
-getindex(D::DihedralKronVector, k::Int) = D[findblockindex(axes(D,1), k)]
+getindex(D::S3KronVector, Kk::BlockIndex{1}) = D[block(Kk)][blockindex(Kk)]
+getindex(D::S3KronVector, k::Int) = D[findblockindex(axes(D,1), k)]
 
 
 
 
 function grammatrix(Q::S3Invariant)
     M = grammatrix(Q.basis)
-    Diagonal(DihedralKronVector(M.diag))
+    Diagonal(S3KronVector(M.diag))
 end
 
 @simplify function *(Ac::QuasiAdjoint{<:Any,<:S3Invariant}, B::S3Invariant)
     M = (Ac').basis'B.basis
-    Diagonal(DihedralKronVector(M.diag))
+    Diagonal(S3KronVector(M.diag))
 end
 
 
@@ -104,3 +115,5 @@ function viewblock(Δ::DihedralWeakLaplacian, KJ::Block{2})
 
     end
 end
+
+=#

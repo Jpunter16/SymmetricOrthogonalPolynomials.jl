@@ -11,7 +11,9 @@ export dihedralQ, dihedral_signfilter, dihedral_trivialfilter, dihedral_tsfilter
 export reflection_trivialfilter, reflection_signfilter, reflection_tsfilter, reflection_stfilter
 export cuberepresentation, cube_filter
 
-export DihedralInvariant, DihedralWeakLaplacian
+export DihedralInvariant, DihedralWeakLaplacian, S3Invariant
+
+export partitions  ##Later eliminate
 
 include("dihedral.jl")
 include("reflection.jl")
@@ -20,6 +22,9 @@ include("cube.jl")
 include("cubevector.jl")
 
 include("dihedralinvariant.jl")
+include("S3invariant.jl")
+
+include("partitions.jl")
 
 
 end # module

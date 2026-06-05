@@ -4,13 +4,15 @@
 # The first few are 
 # 1
 # -----
-# P_1(x) + P_1(y)+ P_1(z)
+# 2P_1(x) + 2P_1(y)+ 2P_1(z)
 # ----
-# P_2(x) + P_2(y)+P_2(z)
-# 2P_1(x)P_1(y)+2P_1(x)P_1(z)+2P_1(y)P_1(z)
+# 2P_2(x) + 2P_2(y) + 2P_2(z)
+# 2P_1(x)P_1(y) + 2P_1(x)P_1(z) + 2P_1(y)P_1(z)
+# ----
+# 2P_3(x) + 2P_3(y) + 2P_3(z)
+# P_2(x)P_1(y)+P_2(x)P_1(z)+P_2(y)P_1(z) +P_2(z)P_1(y)+P_2(y)P_1(x) +P_2(z)P_1(x)
+# 6P_1(x)P_1(y)P_1(z)
 ########
-
-include("partitions.jl")
 
 struct S3Invariant{T,B} <: MultivariateOrthogonalPolynomial{3,T}
     basis::B
@@ -32,12 +34,12 @@ function getindex(Q::S3Invariant, 𝐱::SVector{3}, Kk::BlockIndex{1})
     ℓ,μ,ρ= partitions(K,3,0,K)[k]
     P=Q.basis
 
-    P[x,ℓ+1]*P[y,μ+1]*P[z, ρ+1]+
+    (P[x,ℓ+1]*P[y,μ+1]*P[z, ρ+1]+
     P[x,ℓ+1]*P[z,μ+1]*P[y, ρ+1]+
     P[z,ℓ+1]*P[y,μ+1]*P[x, ρ+1]+
     P[y,ℓ+1]*P[x,μ+1]*P[z, ρ+1]+
     P[z,ℓ+1]*P[x,μ+1]*P[y, ρ+1]+
-    P[y,ℓ+1]*P[z,μ+1]*P[x, ρ+1]
+    P[y,ℓ+1]*P[z,μ+1]*P[x, ρ+1])
 
     #Ask about normalization
 

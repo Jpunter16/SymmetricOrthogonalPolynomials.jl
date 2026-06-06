@@ -34,12 +34,14 @@ function getindex(Q::S3Invariant, 𝐱::SVector{3}, Kk::BlockIndex{1})
     ℓ,μ,ρ= partitions(K,3,0,K)[k]
     P=Q.basis
 
+    num_diff=(ℓ==μ)+(ℓ==ρ)+(μ==ρ)
+
     (P[x,ℓ+1]*P[y,μ+1]*P[z, ρ+1]+
     P[x,ℓ+1]*P[z,μ+1]*P[y, ρ+1]+
     P[z,ℓ+1]*P[y,μ+1]*P[x, ρ+1]+
     P[y,ℓ+1]*P[x,μ+1]*P[z, ρ+1]+
     P[z,ℓ+1]*P[x,μ+1]*P[y, ρ+1]+
-    P[y,ℓ+1]*P[z,μ+1]*P[x, ρ+1])
+    P[y,ℓ+1]*P[z,μ+1]*P[x, ρ+1])/sqrt(6+3*num_diff^2+num_diff)
 
     #Ask about normalization
 

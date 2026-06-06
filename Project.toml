@@ -1,7 +1,7 @@
 name = "SymmetricOrthogonalPolynomials"
 uuid = "fc9a72a9-1ea7-43f9-8932-c79acf841176"
-authors = ["Sheehan Olver <solver@mac.com>"]
 version = "0.1.0"
+authors = ["Sheehan Olver <solver@mac.com>"]
 
 [deps]
 ArrayLayouts = "4c555306-a7a7-4459-81d9-ec55ddd5c99a"
@@ -21,6 +21,7 @@ LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
 MultivariateOrthogonalPolynomials = "4f6956fd-4f93-5457-9149-7bfc4b2ce06d"
 NumericalRepresentationTheory = "6b7c1d51-ecee-4149-97a8-50646b514dce"
 QuasiArrays = "c4ea9172-b204-11e9-377d-29865faadc5c"
+SparseArrays = "2f01184e-e22b-5df5-ae63-d93ebab69eaf"
 StaticArrays = "90137ffa-7385-5640-81b9-e52037218182"
 
 [compat]
@@ -34,4 +35,5 @@ LazyArrays = "2.3.1"
 LazyBandedMatrices = "0.11.3"
 LinearAlgebra = "1.11.0"
 QuasiArrays = "0.12"
+SparseArrays = "1.12.0"
 StaticArrays = "1.9.10"

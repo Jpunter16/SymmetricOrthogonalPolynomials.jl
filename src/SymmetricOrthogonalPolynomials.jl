@@ -1,6 +1,6 @@
 module SymmetricOrthogonalPolynomials
 using BlockArrays, NumericalRepresentationTheory
-using MultivariateOrthogonalPolynomials, InfiniteArrays, LazyArrays, DomainSets, StaticArrays, ClassicalOrthogonalPolynomials, BandedMatrices, BlockBandedMatrices, QuasiArrays, LinearAlgebra, ArrayLayouts, ContinuumArrays
+using MultivariateOrthogonalPolynomials, InfiniteArrays, LazyArrays, DomainSets, StaticArrays, ClassicalOrthogonalPolynomials, BandedMatrices, BlockBandedMatrices, QuasiArrays, LinearAlgebra, ArrayLayouts, ContinuumArrays, SparseArrays
 import ContinuumArrays: Basis, grammatrix, @simplify
 import BlockArrays: block, blockindex, viewblock
 import BlockBandedMatrices: AbstractBandedBlockBandedMatrix, blockbandwidths, subblockbandwidths

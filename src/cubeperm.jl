@@ -1,3 +1,5 @@
+using SparseArrays
+
 function build_A(n)
     A = zeros(Int64, 3*n, 3*n)
     A[1, 2*n] = 1

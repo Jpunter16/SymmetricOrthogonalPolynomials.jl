@@ -1,4 +1,4 @@
-using SparseArrays
+using SparseArrays, BlockDiagonals
 
 function check_indices(N)
     A = Matrix{Int8}(undef, 0, 3)
@@ -13,8 +13,10 @@ function check_indices(N)
             end
         end
     end
-    collect(eachrow(A))
+    collect(eachrow(A))[end-Int(N*(N+1)/2)+1:end,:]
 end
+
+check_indices(2)
 
 function make_second_cycle_S3(v)
     vec=copy(v)
@@ -26,13 +28,12 @@ end
 
 
 function get_B(N)
-    B = Matrix{Int8}(zeros( binomial(N-1+3,3), binomial(N-1+3,3)))
+    dim=Int(N*(N+1)/2)
+    B = Matrix{Int8}(zeros( dim, dim))
     basis_vector_indices=check_indices(N)
     permuted_vector=map(make_second_cycle_S3, basis_vector_indices)
     for i=1:size(B,1)
         pos = findfirst(row -> row == basis_vector_indices[i,:], eachrow(permuted_vector))
-        print(basis_vector_indices[i,:])
-        print(permuted_vector[pos,:])
         if pos !=Nothing
             B[i, pos]=1
         else
@@ -52,13 +53,12 @@ function make_first_cycle_S3(v)
 end
 
 function get_A(N)
-    A = Matrix{Int8}(zeros( binomial(N-1+3,3), binomial(N-1+3,3)))
+    dim=Int(N*(N+1)/2)
+    A = Matrix{Int8}(zeros( dim, dim))
     basis_vector_indices=check_indices(N)
     permuted_vector=map(make_first_cycle_S3, basis_vector_indices)
     for i=1:size(A,1)
         pos = findfirst(row -> row == basis_vector_indices[i,:], eachrow(permuted_vector))
-        print(basis_vector_indices[i,:])
-        print(permuted_vector[pos,:])
         if pos !=Nothing
             A[i, pos]=1
         else
@@ -70,7 +70,14 @@ function get_A(N)
 end
 
 function get_Q(n)
-    rep=Representation{SparseMatrixCSC{Float64, Int64}}(SparseMatrixCSC{Float64, Int64}[get_A(n),get_B(n)])
-    lam,Q=blockdiagonalize(rep)
-    return(Q)
+    N=1:n
+    nrows= Int.(N .*(N .+1) ./2)
+    block_diagonals = [Matrix{Float64}(undef, nrows[i], nrows[i]) for i  in 1:n]
+    for i=N
+        rep= Representation{SparseMatrixCSC{Float64, Int64}}(SparseMatrixCSC{Float64, Int64}[get_A(i),get_B(i)])
+        lam,Q=blockdiagonalize(rep)
+        block_diagonals[i]=Q
+    end
+    Block_Q=BlockDiagonal(block_diagonals)
+    sparse(Block_Q)
 end

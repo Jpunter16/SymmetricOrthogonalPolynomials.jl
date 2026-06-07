@@ -7,7 +7,7 @@ P3=S3Invariant(Ultraspherical(-0.5))
 P=P3.basis
 
 
-n=5  #degree of truncation +1 
+n=10  #degree of truncation +1 
 #N=sum([binomial(i+2,3) for i=1:n])
 N=n
 
@@ -33,7 +33,6 @@ V = (X-Y)^2 + (Y-Z)^2 + (X-Z)^2
 L = ∇ + V
 
 Q=get_Q(N)
-size(Q)
 
 #ask about cubeperm_inds in original file (cubeperm.jl)
 fig = Figure(size=(600,300))

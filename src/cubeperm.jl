@@ -1,49 +1,76 @@
 using SparseArrays
 
-function build_A(n)
-    A = zeros(Int64, 3*n, 3*n)
-    A[1, 2*n] = 1
-    for i = 2:2*n-1
-        if i % 2 == 0
-            A[i, 2*n - i] = 1
-        else
-            A[i, 2*n + div(i, 2)] = 1
+function check_indices(N)
+    A = Matrix{Int8}(undef, 0, 3)
+    for n=1:N
+        iter=1
+        for i=reverse(1:n)
+            k=0
+            for j=reverse(1:(n-i+1)) 
+                k+=1
+                A=vcat(A, [i-1,j-1,k-1]')
+                iter+=1
+            end
         end
     end
-    for i=2*n:3*n-1
-        A[i,1+2(i-2*n)]=1
-    end
-    A[end,end]=1
-    A=sparse(A)
-    dropzeros(A)
-    return A
-
+    collect(eachrow(A))
 end
 
-#build the representation applied to the permutation (1) (2 3):
+function make_second_cycle_S3(v)
+    vec=copy(v)
+    a=vec[2]
+    vec[2]=vec[3]
+    vec[3]=a
+    vec
+end
 
-function build_B(n)
-    B = zeros(Int64, 3*n, 3*n)
-    B[1,1]=1
-    for i=2:2n-1
-        if i % 2 == 0
-            B[i, i+1] = 1
+
+function get_B(N)
+    B = Matrix{Int8}(zeros( binomial(N-1+3,3), binomial(N-1+3,3)))
+    basis_vector_indices=check_indices(N)
+    permuted_vector=map(make_second_cycle_S3, basis_vector_indices)
+    for i=1:size(B,1)
+        pos = findfirst(row -> row == basis_vector_indices[i,:], eachrow(permuted_vector))
+        print(basis_vector_indices[i,:])
+        print(permuted_vector[pos,:])
+        if pos !=Nothing
+            B[i, pos]=1
         else
-            B[i, i-1] = 1
+            error("Permutated vector not found")
         end
-    end
-    for i=2*n:3*n
-        B[i,end-(i-2*n)]=1
-    end
-    B=sparse(B)
-    dropzeros(B)
-    return B
 
+    end
+    B
 end
 
-#get the matrix that orthogonalises the representation by blocks
+function make_first_cycle_S3(v)
+    vec=copy(v)
+    a=vec[2]
+    vec[2]=vec[1]
+    vec[1]=a
+    vec
+end
+
+function get_A(N)
+    A = Matrix{Int8}(zeros( binomial(N-1+3,3), binomial(N-1+3,3)))
+    basis_vector_indices=check_indices(N)
+    permuted_vector=map(make_first_cycle_S3, basis_vector_indices)
+    for i=1:size(A,1)
+        pos = findfirst(row -> row == basis_vector_indices[i,:], eachrow(permuted_vector))
+        print(basis_vector_indices[i,:])
+        print(permuted_vector[pos,:])
+        if pos !=Nothing
+            A[i, pos]=1
+        else
+            error("Permutated vector not found")
+        end
+
+    end
+    A
+end
+
 function get_Q(n)
-    rep=Representation{SparseMatrixCSC{Float64, Int64}}(SparseMatrixCSC{Float64, Int64}[build_A(n),build_B(n)])
+    rep=Representation{SparseMatrixCSC{Float64, Int64}}(SparseMatrixCSC{Float64, Int64}[get_A(n),get_B(n)])
     lam,Q=blockdiagonalize(rep)
     return(Q)
 end

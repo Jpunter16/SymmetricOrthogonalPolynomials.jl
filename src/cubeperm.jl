@@ -1,6 +1,6 @@
 using SparseArrays, BlockDiagonals
 
-function check_indices(N)
+function check_indices(N::Int)
     A = Matrix{Int8}(undef, 0, 3)
     for n=1:N
         iter=1
@@ -18,7 +18,7 @@ end
 
 check_indices(2)
 
-function make_second_cycle_S3(v)
+function make_second_transposition_S3(v)
     vec=copy(v)
     a=vec[2]
     vec[2]=vec[3]
@@ -26,14 +26,13 @@ function make_second_cycle_S3(v)
     vec
 end
 
-
-function get_B(N)
+function get_B(N::Int)
     dim=Int(N*(N+1)/2)
     B = Matrix{Int8}(zeros( dim, dim))
     basis_vector_indices=check_indices(N)
-    permuted_vector=map(make_second_cycle_S3, basis_vector_indices)
+    permuted_vector=map(make_second_transposition_S3, basis_vector_indices)
     for i=1:size(B,1)
-        pos = findfirst(row -> row == basis_vector_indices[i,:], eachrow(permuted_vector))
+        pos = findfirst(row -> row == permuted_vector[i,:], eachrow(basis_vector_indices))
         if pos !=Nothing
             B[i, pos]=1
         else
@@ -44,7 +43,7 @@ function get_B(N)
     B
 end
 
-function make_first_cycle_S3(v)
+function make_first_transposition_S3(v)
     vec=copy(v)
     a=vec[2]
     vec[2]=vec[1]
@@ -52,13 +51,13 @@ function make_first_cycle_S3(v)
     vec
 end
 
-function get_A(N)
+function get_A(N::Int)
     dim=Int(N*(N+1)/2)
     A = Matrix{Int8}(zeros( dim, dim))
     basis_vector_indices=check_indices(N)
-    permuted_vector=map(make_first_cycle_S3, basis_vector_indices)
+    permuted_vector=map(make_first_transposition_S3, basis_vector_indices)
     for i=1:size(A,1)
-        pos = findfirst(row -> row == basis_vector_indices[i,:], eachrow(permuted_vector))
+        pos = findfirst(row -> row == permuted_vector[i,:], eachrow(basis_vector_indices))
         if pos !=Nothing
             A[i, pos]=1
         else
@@ -69,7 +68,7 @@ function get_A(N)
     A
 end
 
-function get_Q(n)
+function get_Q(n::Int)
     N=1:n
     nrows= Int.(N .*(N .+1) ./2)
     block_diagonals = [Matrix{Float64}(undef, nrows[i], nrows[i]) for i  in 1:n]

@@ -7,7 +7,7 @@ P3=S3Invariant(Ultraspherical(-0.5))
 P=P3.basis
 
 
-n=10  #degree of truncation +1 
+n=5  #degree of truncation +1 
 #N=sum([binomial(i+2,3) for i=1:n])
 N=n
 
@@ -42,4 +42,5 @@ Axis(fig[1,2]; yreversed=true, title="Permutation adapted")
 spy!(round.(Matrix(Q'*L*Q);digits=10))
 fig 
 
+#save("Sparsity of Schordinger operator.png",fig)
 

@@ -2,12 +2,16 @@ using SymmetricOrthogonalPolynomials, ClassicalOrthogonalPolynomials, LazyBanded
 import SparseArrays: sparse
 import CairoMakie:spy!
 
+include("../src/RepTheoryPDEs.jl")
+using .RepTheoryPDEs
+
+
 P3=S3Invariant(Ultraspherical(-0.5))
 
 P=P3.basis
 
 
-n=5  #degree of truncation +1 
+n=10  #degree of truncation +1 
 #N=sum([binomial(i+2,3) for i=1:n])
 N=n
 
@@ -33,13 +37,20 @@ V = (X-Y)^2 + (Y-Z)^2 + (X-Z)^2
 L = ∇ + V
 
 Q=get_Q(N)
+inds = cubeperm_inds(N)
+
+alltups = vcat((lextuples(n) for n=1:N)...)
+inds_o = findall(isodd,map(sum, alltups)); inds_e = findall(iseven,map(sum, alltups))
+length(inds_o) # 95
+length(inds_e) # 125
+inds_eo = [inds_o; inds_e]
 
 #ask about cubeperm_inds in original file (cubeperm.jl)
 fig = Figure(size=(600,300))
 Axis(fig[1,1]; yreversed=true, title="Reflection adapted")
-spy!(sparse(Matrix((L))))
+spy!(sparse(Matrix((L)[inds_eo, inds_eo])))
 Axis(fig[1,2]; yreversed=true, title="Permutation adapted")
-spy!(round.(Matrix(Q'*L*Q);digits=10))
+spy!(round.(Matrix(Q'*L*Q)[inds,inds];digits=10))
 fig 
 
 #save("Sparsity of Schordinger operator.png",fig)

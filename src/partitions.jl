@@ -4,7 +4,7 @@
 # Copyright (C) 2020 Ulrich Thiel, ulthiel.com/math
 ################################################################################
 
-export Partition, partitions, ascending_partitions, dominates, conjugate, getindex_safe, num_partitions
+#export Partition, partitionsv, ascending_partitions, dominates, conjugate, getindex_safe, num_partitions
 
 """
     Partition{T} <: AbstractArray{T,1}
@@ -26,7 +26,7 @@ julia> P=Partition(Int8[3,2,1]) #Same partition but using 8 bit integers
 
 * Usually, |λ| ≔ n is called the **size** of λ. In Julia, the function ```size``` for arrays already exists and returns the *dimension* of an array. Instead, you can use the Julia function ```sum``` to get the sum of the parts.
 
-* There is no performance impact by using an own type for partitions rather than simply using arrays—and this is of course much cleaner. The implementation of a subtype of AbstractArray is explained in the [Julia documentation](https://docs.julialang.org/en/v1/manual/interfaces/#man-interface-array).
+* There is no performance impact by using an own type for partitionsv rather than simply using arrays—and this is of course much cleaner. The implementation of a subtype of AbstractArray is explained in the [Julia documentation](https://docs.julialang.org/en/v1/manual/interfaces/#man-interface-array).
 
 # References
 1. Wikipedia, [Partition (number theory)](https://en.wikipedia.org/wiki/Partition_(number_theory))
@@ -79,7 +79,7 @@ end
 """
     getindex_safe(P::Partition, i::Int)
 
-In algorithms involving partitions it is sometimes convenient to be able to access parts beyond the length of the partition, and then you want to get zero instead of an error. This function is a shortcut for
+In algorithms involving partitionsv it is sometimes convenient to be able to access parts beyond the length of the partition, and then you want to get zero instead of an error. This function is a shortcut for
 ```
 return (i>length(P.p) ? 0 : getindex(P.p,i))
 ```
@@ -93,19 +93,19 @@ end
 
 
 """
-    partitions(n::Integer)
+    partitionsv(n::Integer)
 
-A list of all partitions of an integer n ≥ 0, produced in lexicographically *descending* order. This ordering is like in Sage, but opposite to GAP. You can apply the function ```reverse``` to reverse the order. As usual, you may increase performance by using smaller integer types. The algorithm used is "Algorithm ZS1" by Zoghbi & Stojmenovic (1998).
+A list of all partitionsv of an integer n ≥ 0, produced in lexicographically *descending* order. This ordering is like in Sage, but opposite to GAP. You can apply the function ```reverse``` to reverse the order. As usual, you may increase performance by using smaller integer types. The algorithm used is "Algorithm ZS1" by Zoghbi & Stojmenovic (1998).
 
 # Examples
 ```julia-repl
-julia> partitions(Int8(10)) #Using 8-bit integers
+julia> partitionsv(Int8(10)) #Using 8-bit integers
 ```
 
 # References
-1. Zoghbi, A. & Stojmenovic, I. (1998). Fast algorithms for generating integer partitions. *Int. J. Comput. Math., 70*(2), 319–332. [https://doi.org/10.1080/00207169808804755](https://doi.org/10.1080/00207169808804755)
+1. Zoghbi, A. & Stojmenovic, I. (1998). Fast algorithms for generating integer partitionsv. *Int. J. Comput. Math., 70*(2), 319–332. [https://doi.org/10.1080/00207169808804755](https://doi.org/10.1080/00207169808804755)
 """
-function partitions(n::Integer)
+function partitionsv(n::Integer)
 
     #Argument checking
     n >= 0 || throw(ArgumentError("n >= 0 required"))
@@ -121,7 +121,7 @@ function partitions(n::Integer)
     end
 
     # Now, the algorithm starts
-    P = Partition{T}[]    #this will be the array of all partitions
+    P = Partition{T}[]    #this will be the array of all partitionsv
     k = 1
     q = 1
     d = fill( T(1), n )
@@ -162,17 +162,17 @@ end
 """
     ascending_partitions(n::Integer;alg="ks")
 
-Instead of encoding a partition of an integer n ≥ 0 as a *descending* sequence (which is our convention), one can also encode it as an *ascending* sequence. In the papers Kelleher & O'Sullivan (2014) and Merca (2012) it is said that generating the list of all ascending partitions is more efficient than generating descending ones. To test this, I have implemented the algorithms given in the papers:
+Instead of encoding a partition of an integer n ≥ 0 as a *descending* sequence (which is our convention), one can also encode it as an *ascending* sequence. In the papers Kelleher & O'Sullivan (2014) and Merca (2012) it is said that generating the list of all ascending partitionsv is more efficient than generating descending ones. To test this, I have implemented the algorithms given in the papers:
 1. "ks" (*default*) is the algorithm "AccelAsc" (Algorithm 4.1) in Kelleher & O'Sullivan (2014).
 2. "m" is Algorithm 6 in Merca (2012). This is actually similar to "ks".
 
-The ascending partitions are stored here as arrays and are not of type ```Partition``` since the latter are descending by our convention. I am using "ks" as default since it looks slicker and I believe there is a tiny mistake in the publication of "m" (which I fixed).
+The ascending partitionsv are stored here as arrays and are not of type ```Partition``` since the latter are descending by our convention. I am using "ks" as default since it looks slicker and I believe there is a tiny mistake in the publication of "m" (which I fixed).
 
 # Comparison
 
 I don't see a significant speed difference to the descending encoding:
 ```julia-repl
-julia> @btime partitions(Int8(90));
+julia> @btime partitionsv(Int8(90));
     3.376 s (56634200 allocations: 6.24 GiB)
 
 julia> @btime ascending_partitions(Int8(90),alg="ks");
@@ -205,7 +205,7 @@ function ascending_partitions(n::Integer; alg="ks")
 
     # Now, the algorithm starts
     if alg=="ks"
-        P = Vector{T}[]    #this will be the array of all partitions
+        P = Vector{T}[]    #this will be the array of all partitionsv
         a = zeros(T, n)
         k = 2
         y = n-1
@@ -232,7 +232,7 @@ function ascending_partitions(n::Integer; alg="ks")
         return P
 
     elseif alg=="m"
-        P = Vector{T}[]    #this will be the array of all partitions
+        P = Vector{T}[]    #this will be the array of all partitionsv
         a = zeros(T, n)
         k = 1
         x = 1
@@ -294,21 +294,21 @@ end
 
 
 """
-    partitions(m::Integer, n::Integer, l1::Integer, l2::Integer; z=0)
+    partitionsv(m::Integer, n::Integer, l1::Integer, l2::Integer; z=0)
 
-A list of all partitions of an integer m ≥ 0 into n ≥ 0 parts with lower bound l1 ≥ 0 and upper bound l2 ≥ l1 for the parts. There are two choices for the parameter z:
+A list of all partitionsv of an integer m ≥ 0 into n ≥ 0 parts with lower bound l1 ≥ 0 and upper bound l2 ≥ l1 for the parts. There are two choices for the parameter z:
 * z=0: no further restriction (*default*);
 * z=1: only distinct parts.
-The partitions are produced in *decreasing* order.
+The partitionsv are produced in *decreasing* order.
 
 The algorithm used is "parta" in Riha & James (1976), de-gotoed from old ALGOL code by E. Thiel!
 
 # References
-1. Riha, W. & James, K. R. (1976). Algorithm 29 efficient algorithms for doubly and multiply restricted partitions. *Computing, 16*, 163–168. [https://link.springer.com/article/10.1007/BF02241987](https://link.springer.com/article/10.1007/BF02241987)
+1. Riha, W. & James, K. R. (1976). Algorithm 29 efficient algorithms for doubly and multiply restricted partitionsv. *Computing, 16*, 163–168. [https://link.springer.com/article/10.1007/BF02241987](https://link.springer.com/article/10.1007/BF02241987)
 """
-function partitions(m::Integer, n::Integer, l1::Integer, l2::Integer; z=0)
+function partitionsv(m::Integer, n::Integer, l1::Integer, l2::Integer; z=0)
 
-    # Note that we are considering partitions of m here. I would switch m and n
+    # Note that we are considering partitionsv of m here. I would switch m and n
     # but the algorithm was given like that and I would otherwise confuse myself
     # implementing it.
 
@@ -338,7 +338,7 @@ function partitions(m::Integer, n::Integer, l1::Integer, l2::Integer; z=0)
     end
 
     #Algorithm starts here
-    P = Partition{T}[]    #this will be the array of all partitions
+    P = Partition{T}[]    #this will be the array of all partitionsv
     x = zeros(T, n)
     y = zeros(T, n)
     num = 0
@@ -404,28 +404,28 @@ end
 
 
 """
-    partitions(m::Integer, n::Integer)
+    partitionsv(m::Integer, n::Integer)
 
-All partitions of an integer m ≥ 0 into n ≥ 1 parts (no further restrictions).
+All partitionsv of an integer m ≥ 0 into n ≥ 1 parts (no further restrictions).
 """
-function partitions(m::Integer, n::Integer)
-    return partitions(m,n,1,m,z=0)
+function partitionsv(m::Integer, n::Integer)
+    return partitionsv(m,n,1,m,z=0)
 end
 
 
 
 """
-    partitions(mu::Array{Integer,1}, m::Integer, v::Array{Integer,1}, n::Integer)
+    partitionsv(mu::Array{Integer,1}, m::Integer, v::Array{Integer,1}, n::Integer)
 
-All partitions of an integer m >= 0 into n >= 1 parts, where each part is an element in v and each v[i] occurs a maximum of mu[i] times. The partitions are produced in    *decreasing* order. The algorithm used is a de-gotoed version (by E. Thiel!) of algorithm "partb" in Riha & James (1976).
+All partitionsv of an integer m >= 0 into n >= 1 parts, where each part is an element in v and each v[i] occurs a maximum of mu[i] times. The partitionsv are produced in    *decreasing* order. The algorithm used is a de-gotoed version (by E. Thiel!) of algorithm "partb" in Riha & James (1976).
 
 # Remark
-The original algorithm lead to BoundsErrors, since r could get smaller than 1. Furthermore x and y are handled as arrays with an infinite length. After finding all valid partitions, the algorithm will continue searching for partitions of length n+1. We thus had to add a few additional checks and interruptions. Done by T. Schmit.
+The original algorithm lead to BoundsErrors, since r could get smaller than 1. Furthermore x and y are handled as arrays with an infinite length. After finding all valid partitionsv, the algorithm will continue searching for partitionsv of length n+1. We thus had to add a few additional checks and interruptions. Done by T. Schmit.
 
 # References
-1. Riha, W. & James, K. R. (1976). Algorithm 29 efficient algorithms for doubly and multiply restricted partitions. *Computing, 16*, 163–168. [https://link.springer.com/article/10.1007/BF02241987](https://link.springer.com/article/10.1007/BF02241987)
+1. Riha, W. & James, K. R. (1976). Algorithm 29 efficient algorithms for doubly and multiply restricted partitionsv. *Computing, 16*, 163–168. [https://link.springer.com/article/10.1007/BF02241987](https://link.springer.com/article/10.1007/BF02241987)
 """
-function partitions(mu::Array{S,1}, m::Integer, v::Array{S,1}, n::Integer) where S<:Integer
+function partitionsv(mu::Array{S,1}, m::Integer, v::Array{S,1}, n::Integer) where S<:Integer
     length(mu)==length(v) || throw(ArgumentError("mu and v should have the same length"))
     m>=0 || throw(ArgumentError("m ≥ 0 required"))
     n>=1 || throw(ArgumentError("n ≥ 1 required"))
@@ -558,7 +558,7 @@ end
 """
     dominates(λ::Partition, μ::Partition)
 
-The **dominance order** on partitions is the partial order ⊵ defined by λ ⊵ μ if and only if λ₁ + … + λᵢ ≥ μ₁ + … + μᵢ for all i. This function returns true if λ ⊵ μ.
+The **dominance order** on partitionsv is the partial order ⊵ defined by λ ⊵ μ if and only if λ₁ + … + λᵢ ≥ μ₁ + … + μᵢ for all i. This function returns true if λ ⊵ μ.
 
 # References
 1. Wikipedia, [Dominance order](https://en.wikipedia.org/wiki/Dominance_order)

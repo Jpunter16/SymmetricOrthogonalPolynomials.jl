@@ -31,7 +31,7 @@ axes(::S3Invariant) = (Inclusion(ChebyshevInterval() × ChebyshevInterval() × C
 function getindex(Q::S3Invariant, 𝐱::SVector{3}, Kk::BlockIndex{1})
     x,y,z = 𝐱
     K,k = block(Kk), blockindex(Kk)
-    ℓ,μ,ρ= partitions(K,3,0,K)[k]
+    ℓ,μ,ρ= partitionsv(K,3,0,K)[k]
     P=Q.basis
 
     num_diff=(ℓ==μ)+(ℓ==ρ)+(μ==ρ)

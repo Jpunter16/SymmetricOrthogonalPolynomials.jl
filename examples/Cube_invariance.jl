@@ -1,9 +1,7 @@
 using SymmetricOrthogonalPolynomials, ClassicalOrthogonalPolynomials, LazyBandedMatrices,CairoMakie, BlockDiagonals
 import SparseArrays: sparse
 import CairoMakie:spy!
-
-include("../src/RepTheoryPDEs.jl")
-using .RepTheoryPDEs
+import SymmetricOrthogonalPolynomials:cubeperm_inds
 
 
 P3=S3Invariant(Ultraspherical(-0.5))
@@ -11,14 +9,13 @@ P3=S3Invariant(Ultraspherical(-0.5))
 P=P3.basis
 
 
-n=10  #degree of truncation +1 
-#N=sum([binomial(i+2,3) for i=1:n])
+n=3  #degree of truncation +1 
 N=n
 
 P_diff=diff(P)
 
 # 1D mass and stifness matrices
-M1D = (P' * P)[1:N, 1:N]       
+M1D = (P' * P)[1:N, 1:N]       #later change to avoid degree 0 and 1 plynomials that are not 0 at the boundary
 S1D = (P_diff' * P_diff)[1:N, 1:N]    
 
 # 3D stiffness matrix
@@ -51,7 +48,9 @@ Axis(fig[1,1]; yreversed=true, title="Reflection adapted")
 spy!(sparse(Matrix((L)[inds_eo, inds_eo])))
 Axis(fig[1,2]; yreversed=true, title="Permutation adapted")
 spy!(round.(Matrix(Q'*L*Q)[inds,inds];digits=10))
+
+str= "Sparsity of Schordinger operator n=" * string(n-1) *".png"
+
+save(str,fig)
+
 fig 
-
-#save("Sparsity of Schordinger operator.png",fig)
-

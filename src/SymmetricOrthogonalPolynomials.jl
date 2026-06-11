@@ -13,6 +13,8 @@ export cuberepresentation, cube_filter, lextuples
 
 export DihedralInvariant, DihedralWeakLaplacian, S3Invariant, get_Q
 
+export cubeperm_inds
+
 include("dihedral.jl")
 include("reflection.jl")
 include("cube.jl")
@@ -24,6 +26,7 @@ include("partitions.jl")
 include("dihedralinvariant.jl")
 include("S3invariant.jl")
 include("cubeperm.jl")
+include("RepTheoryPDEs.jl")
 
 
 end # module

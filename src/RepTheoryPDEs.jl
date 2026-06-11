@@ -1,5 +1,4 @@
-module RepTheoryPDEs
-using NumericalRepresentationTheory, SymmetricOrthogonalPolynomials, SparseArrays, BlockArrays
+using NumericalRepresentationTheory, SparseArrays, BlockArrays
 export cubeperm_Q, cubeperm_inds, cubeperm_filter, cubevec2tens
 import SymmetricOrthogonalPolynomials: lextuples
 import NumericalRepresentationTheory:partitions
@@ -114,5 +113,3 @@ function cubevec2tens(C, N)
     end
     X
 end
-
-end # module RepTheoryPDEs

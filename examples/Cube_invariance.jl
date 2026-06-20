@@ -9,7 +9,7 @@ P3=S3Invariant(Ultraspherical(-0.5))
 P=P3.basis
 
 
-n=3  #degree of truncation +1 
+n=15  #degree of truncation +1 
 N=n
 
 P_diff=diff(P)

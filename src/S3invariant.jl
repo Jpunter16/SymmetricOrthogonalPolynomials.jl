@@ -19,7 +19,7 @@ struct S3Invariant{T,B} <: MultivariateOrthogonalPolynomial{3,T}
 end
 S3Invariant(B::AbstractQuasiMatrix{T}) where T = S3Invariant{T, typeof(B)}(B)
 
-S3Invariant() = S3Invariant(Normalized(Legendre()))
+S3Invariant() = S3Invariant(Legendre())
 
 
 S3axis(K) = BlockedOneTo(round.((4:(K+4)) .^ 2 ./ 12))
@@ -31,17 +31,29 @@ axes(::S3Invariant) = (Inclusion(ChebyshevInterval() × ChebyshevInterval() × C
 function getindex(Q::S3Invariant, 𝐱::SVector{3}, Kk::BlockIndex{1})
     x,y,z = 𝐱
     K,k = block(Kk), blockindex(Kk)
-    ℓ,μ,ρ= partitionsv(K,3,0,K)[k]
+    K_int=Int(K)-1
+    part= Partition_3_parts(K_int)[k]
+    sigmaall = unique(collect(permutations(part)))
+    numperms = length(sigmaall)
+    norm = 1 / sqrt(numperms)
+    
+    total = 0
     P=Q.basis
 
-    num_diff=(ℓ==μ)+(ℓ==ρ)+(μ==ρ)
+    for i = 1:numperms
+        mult=P[x,sigmaall[i][1]+1]*P[y,sigmaall[i][2]+1]*P[z,sigmaall[i][3]+1]
+        total = total + mult
+    end
+    norm * total
+
+    #=num_diff=(ℓ==μ)+(ℓ==ρ)+(μ==ρ)
 
     (P[x,ℓ+1]*P[y,μ+1]*P[z, ρ+1]+
     P[x,ℓ+1]*P[z,μ+1]*P[y, ρ+1]+
     P[z,ℓ+1]*P[y,μ+1]*P[x, ρ+1]+
     P[y,ℓ+1]*P[x,μ+1]*P[z, ρ+1]+
     P[z,ℓ+1]*P[x,μ+1]*P[y, ρ+1]+
-    P[y,ℓ+1]*P[z,μ+1]*P[x, ρ+1])/sqrt(6+3*num_diff^2+num_diff)
+    P[y,ℓ+1]*P[z,μ+1]*P[x, ρ+1])/sqrt(6+3*num_diff^2+num_diff) =#
 
     #Ask about normalization
 
@@ -53,6 +65,12 @@ getindex(Q::S3Invariant, 𝐱::SVector{3}, k::Int) = Q[𝐱,findblockindex(axes(
 getindex(Q::S3Invariant, 𝐱::SVector{3}, J::Block{1}) = [Q[𝐱,J[j]] for j = 1:length(axes(Q,2)[J])]
 getindex(Q::S3Invariant, 𝐱::SVector{3}, JR::BlockOneTo) = mortar([Q[𝐱,J] for J in JR])
 
+
+struct Laplacian{T} <: AbstractBandedBlockBandedMatrix{T}
+    D::AbstractMatrix{T} # 1D Weak Laplacian
+end
+
+#=
 struct S3KronVector{T,D<:AbstractVector{T}} <: AbstractBlockVector{T}
     d::D
 end
@@ -60,7 +78,6 @@ end
 axes(::S3KronVector) = (S3axis(∞),)
 size(::S3KronVector) = (ℵ₀,)
 
-#=
 function getindex(D::S3KronVector, K::Block{1})
     K̃ = Int(K)
     D.d[1:2:K̃] .* D.d[2K̃-1:-2:K̃]    

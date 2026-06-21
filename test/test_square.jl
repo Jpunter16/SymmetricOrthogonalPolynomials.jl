@@ -18,7 +18,7 @@ K = Block.(1:5)
 # decomposed into irreps of ℤ_2^2 corresponding to reflection symmetries (x,y) -> (x,-y) and (x,y) -> (-x,y)
 
 
-## D_8 group https://groupprops.subwiki.org/wiki/Linear_representation_theory_of_dihedral_group:D8
+## D_4 group https://groupprops.subwiki.org/wiki/Linear_representation_theory_of_dihedral_group:D8
 #  with  generators x, a has following irreps: 
 #  x             a
 #  1             1              (trivial)

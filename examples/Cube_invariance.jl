@@ -22,7 +22,7 @@ S1D = (P_diff' * P_diff)[1:N, 1:N]
 ∇ = sparse(KronTrav(S1D, M1D,M1D)) + sparse(KronTrav(M1D, S1D,M1D)+sparse(KronTrav(M1D,M1D,S1D)))
 
 #jacobi matrix
-J=jacobimatrix(P)[1:N, 1:N]
+J = jacobimatrix(P)[1:N, 1:N]
 X = sparse(KronTrav(J,M1D,M1D))
 Y = sparse(KronTrav(M1D,J,M1D))
 Z = sparse(KronTrav(M1D,M1D,J))

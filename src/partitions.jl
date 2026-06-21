@@ -4,6 +4,6 @@ function Partition_3_parts(n::Integer)
     else
         parts = collect(Combinatorics.partitions(n))
         parts = filter(p -> length(p) <= 3, parts)
-        [vcat(reverse(p), zeros(Int, 3 - length(p))) for p in parts]
+        [vcat(p, zeros(Int, 3 - length(p))) for p in parts]
     end
 end

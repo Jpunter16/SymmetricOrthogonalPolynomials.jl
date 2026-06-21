@@ -22,7 +22,7 @@ S3Invariant(B::AbstractQuasiMatrix{T}) where T = S3Invariant{T, typeof(B)}(B)
 S3Invariant() = S3Invariant(Legendre())
 
 
-S3axis(K) = BlockedOneTo(round.((4:(K+4)) .^ 2 ./ 12))
+S3axis(K) = blockedrange(((3:(K+2)) .^ 2 .+ 6) .÷ 12)
 axes(::S3Invariant) = (Inclusion(ChebyshevInterval() × ChebyshevInterval() × ChebyshevInterval()), S3axis(∞))
 
 

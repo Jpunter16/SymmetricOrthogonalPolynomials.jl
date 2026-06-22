@@ -65,10 +65,35 @@ getindex(Q::S3Invariant, 𝐱::SVector{3}, k::Int) = Q[𝐱,findblockindex(axes(
 getindex(Q::S3Invariant, 𝐱::SVector{3}, J::Block{1}) = [Q[𝐱,J[j]] for j = 1:length(axes(Q,2)[J])]
 getindex(Q::S3Invariant, 𝐱::SVector{3}, JR::BlockOneTo) = mortar([Q[𝐱,J] for J in JR])
 
-
-struct Laplacian{T} <: AbstractBandedBlockBandedMatrix{T}
-    D::AbstractMatrix{T} # 1D Weak Laplacian
+function partitionLaplacian(v::Vector{Int})
+    D= [zeros(Int,3) for _ in 1:3]
+    for i=1:3
+        aux=v
+        aux[i]=aux[i]-2
+        D[i]=aux
+    end
+    D
 end
+
+
+function getLaplacian(Q::S3Invariant, n::Int)
+    for i=0:n+1
+        part=Partition_3_parts(0)
+        partdivs=2
+    end
+
+
+end
+
+
+struct S3InvariantLaplacian{T,B} <: AbstractMatrix{T}
+    D::AbstractMatrix{T} # Laplacian
+end
+
+function getindex(Δ::S3InvariantLaplacian, X::SVector{3}, Kk::BlockIndex{1})
+
+end
+
 
 #=
 struct S3KronVector{T,D<:AbstractVector{T}} <: AbstractBlockVector{T}

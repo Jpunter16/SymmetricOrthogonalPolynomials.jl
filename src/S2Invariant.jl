@@ -21,35 +21,6 @@ function productCombination(a::Partition2,b::Partition2)
     productCombination(a.p,b.p)
 end
 
-function stiffnessmatrix(P, n::Int)
-    # P'*diff(P,2) hits a method ambiguity in LazyArrays/ArrayLayouts when P is a
-    # Weighted basis (e.g. Weighted(Ultraspherical(3/2))), since the product composes
-    # two lazily-`\`-applied banded matrices. Route through the unweighted basis C and
-    # materialize finite blocks eagerly so the final multiply is plain dense matmul.
-    if P isa Weighted
-        C = P.P
-        D2 = C \ diff(diff(P))
-        bw = bandwidths(D2)[2]
-        m = n + 1 + (bw isa Integer ? bw : 0)
-        G = P' * C
-        return Matrix(G[1:n+1, 1:m]) * Matrix(D2[1:m, 1:n+1])
-    else
-        return (P'*diff(P,2))[1:n+1,1:n+1]
-    end
-end
-
-function Q_S2(n::Int)
-    parts = n == 0 ? [[0,0]] : [vcat(p, zeros(Int, 2-length(p))) for p in collect(partitions(n)) if length(p) <= 2]
-    m = length(parts)
-    Qn = zeros(m, n+1)
-    for (row, p) in enumerate(parts)
-        a, b = p[1], p[2]                 # a ≥ b, a+b = n
-        norm = sqrt(2 + 2*(a == b))
-        Qn[row, a+1] += 1/norm
-        Qn[row, b+1] += 1/norm
-    end
-    Qn
-end
 
 function getLaplacianS2InvariantBasis(Q::S2Invariant, n::Int)
     a = blockedrange(floor.(Int,((0:n)./2 .+1)) )

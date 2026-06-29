@@ -25,8 +25,19 @@ S3Invariant() = S3Invariant(Legendre())
 S3axis(K) = blockedrange(((3:(K+2)) .^ 2 .+ 6) .÷ 12)
 axes(::S3Invariant) = (Inclusion(ChebyshevInterval() × ChebyshevInterval() × ChebyshevInterval()), S3axis(∞))
 
+function getexpresionS3Invariant(Q::S3Invariant,part::Partition3) #only gets polinomials of type P[x,n]*P[x,m], only taking the same space variable, not useful
+    P=Q.basis
+    sigmaall = unique(collect(permutations(part.p)))
+    numperms = length(sigmaall)
+    norm = 1 / sqrt(numperms)
 
-
+    total = P[:,sigmaall[1][1]+1].*P[:,sigmaall[1][2]+1].*P[:,sigmaall[1][3]+1]
+    for i = 2:numperms
+        mult=P[:,sigmaall[i][1]+1].*P[:,sigmaall[i][2]+1].*P[:,sigmaall[i][3]+1]
+        total = total .+ mult
+    end
+    norm * total
+end
 
 function getindex(Q::S3Invariant, 𝐱::SVector{3}, Kk::BlockIndex{1})
     x,y,z = 𝐱
@@ -65,29 +76,49 @@ getindex(Q::S3Invariant, 𝐱::SVector{3}, k::Int) = Q[𝐱,findblockindex(axes(
 getindex(Q::S3Invariant, 𝐱::SVector{3}, J::Block{1}) = [Q[𝐱,J[j]] for j = 1:length(axes(Q,2)[J])]
 getindex(Q::S3Invariant, 𝐱::SVector{3}, JR::BlockOneTo) = mortar([Q[𝐱,J] for J in JR])
 
-function partitionLaplacian(v::Vector{Int})
+function checkPosiblePartitionLaplacian(v::Partition3)
     D= [zeros(Int,3) for _ in 1:3]
     for i=1:3
-        aux=v
+        aux=v.p
         aux[i]=aux[i]-2
+        aux=sort(aux, rev=true)
         D[i]=aux
     end
-    D
+    [all(x ->x >=0, v) for v in D]
 end
 
 
-function getLaplacian(Q::S3Invariant, n::Int)
-    for i=0:n+1
-        part=Partition_3_parts(0)
-        partdivs=2
+
+function getLaplacianFromUltraspherical(Q::S3Invariant, n::Int) #get krontrav matrices
+    D2=S3axis(n)
+    C=Q.basis
+    T = typeof(Q).parameters[1]
+    m=2
+    #this code from ultraspherical.jl line 152, differentiate ultraspherical
+    μ = pochhammer(convert(T,C.λ),m)*convert(T,2)^m
+    D2_mult = _BandedMatrix(Fill(μ,1,∞), ℵ₀, -m, m)
+    Px=diff(C,2)
+    Py=Px
+    Pz=Px
+    for i=0:n
+        part=Partition_3_parts(i)
+        for j=1:eachindex(part)
+            part_lap=checkPosiblePartitionLaplacian(part[j])
+            for k=1:eachindex(part_lap)
+                if part_lap[k]
+                end
+            end
+        end
     end
-
+    D2_mult
 
 end
 
 
-struct S3InvariantLaplacian{T,B} <: AbstractMatrix{T}
-    D::AbstractMatrix{T} # Laplacian
+
+struct S3InvariantLaplacian{T,B} <: MultivariateOrthogonalPolynomial{3,T}
+    basis::B
+    D::BlockArray{T} # Laplacian
 end
 
 function getindex(Δ::S3InvariantLaplacian, X::SVector{3}, Kk::BlockIndex{1})

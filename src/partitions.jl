@@ -59,6 +59,15 @@ function Partition_2_parts(n::Int)
     end
 end
 
+function PartitionVectorToVector(Partitionv::Vector{Partition3})
+    [part.p for part in Partitionv]
+end
+
+function PartitionVectorToVector(Partitionv::Vector{Partition2})
+    [part.p for part in Partitionv]
+end
+
+
 function getindex(p::Partition2,n::Int)
     p.p[n]
 end
@@ -68,4 +77,8 @@ function Base.convert(::Type{NumericalRepresentationTheory.Partition}, y::Partit
 end
 function Base.convert(::Type{NumericalRepresentationTheory.Partition}, y::Partition3)
     NumericalRepresentationTheory.Partition(filter(t->t !=0, y.p))
+end
+
+function Base.reverse(p::Partition2)
+    reverse(p.p)
 end

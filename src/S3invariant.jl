@@ -89,28 +89,8 @@ end
 
 
 
-function getLaplacianFromUltraspherical(Q::S3Invariant, n::Int) #get krontrav matrices
-    D2=S3axis(n)
-    C=Q.basis
-    T = typeof(Q).parameters[1]
-    m=2
-    #this code from ultraspherical.jl line 152, differentiate ultraspherical
-    μ = pochhammer(convert(T,C.λ),m)*convert(T,2)^m
-    D2_mult = _BandedMatrix(Fill(μ,1,∞), ℵ₀, -m, m)
-    Px=diff(C,2)
-    Py=Px
-    Pz=Px
-    for i=0:n
-        part=Partition_3_parts(i)
-        for j=1:eachindex(part)
-            part_lap=checkPosiblePartitionLaplacian(part[j])
-            for k=1:eachindex(part_lap)
-                if part_lap[k]
-                end
-            end
-        end
-    end
-    D2_mult
+function getLaplacianS3AntiAndInvariantBasis(Q::S3Invariant, n::Int) #get krontrav matrices
+    
 
 end
 

@@ -76,6 +76,28 @@ getindex(Q::S3Invariant, 𝐱::SVector{3}, k::Int) = Q[𝐱,findblockindex(axes(
 getindex(Q::S3Invariant, 𝐱::SVector{3}, J::Block{1}) = [Q[𝐱,J[j]] for j = 1:length(axes(Q,2)[J])]
 getindex(Q::S3Invariant, 𝐱::SVector{3}, JR::BlockOneTo) = mortar([Q[𝐱,J] for J in JR])
 
+function addDistinctPartition(i::Int)
+    part=Partition_3_parts(i)
+    j=1
+    anti=Bool[]
+    while j<=length(part)
+        if hasDistinctElements(part[j])
+            insert!(part,j+1,part[j])
+            append!(anti,true)
+            j+=1
+        end
+        append!(anti,false)
+        j+=1
+
+    end
+    part,anti
+end
+
+
+function hasDistinctElements(v::Vector{Int})
+    length(v)==length(unique(v))
+end
+
 function checkPosiblePartitionLaplacian(v::Partition3)
     D= [zeros(Int,3) for _ in 1:3]
     for i=1:3
@@ -87,11 +109,55 @@ function checkPosiblePartitionLaplacian(v::Partition3)
     [all(x ->x >=0, v) for v in D]
 end
 
+function MultiplyPermutationByLaplacianOfBasisElement(p::Vector{Int},q::Vector{Int},P::OrthogonalPolynomial)
+    mass_mat=(P'*P)
+    stiff_mat=(P'*diff(P,2))
+    index=collect(zip(p.+1,q.+1))
+    (stiff_mat[index[1]...]*mass_mat[index[2]...]*mass_mat[index[3]...]
+    +mass_mat[index[1]...]*stiff_mat[index[2]...]*mass_mat[index[3]...]
+    +mass_mat[index[1]...]*mass_mat[index[2]...]*stiff_mat[index[3]...])
+end
+
+function elementStiffMatrixLaplacianS3AntiAndInvariantBasis(p::Vector{Int},q::Vector{Int},P::OrthogonalPolynomial, antip::Bool,antiq::Bool)
+    p_perm=unique(collect(permutations(p)))
+    q_perm=unique(collect(permutations(q)))
+    sum=0.0
+    anti_invar_sign=[1,-1,-1,1,1,-1]
+    for i=eachindex(p_perm)
+        si = antip ? anti_invar_sign[i] : 1
+        for j=eachindex(q_perm)
+            sj = antiq ? anti_invar_sign[j] : 1
+            sum+=MultiplyPermutationByLaplacianOfBasisElement(p_perm[i],q_perm[j],P) * si * sj * 1/sqrt(length(p_perm)*length(q_perm))
+        end
+    end
+    sum
+end
+
 
 
 function getLaplacianS3AntiAndInvariantBasis(Q::S3Invariant, n::Int) #get krontrav matrices
-    
-
+    a = blockedrange(round.(Int,(((0:n) .+3).^2)./12) .+[sum(map(t->hasDistinctElements(t),Partition_3_parts(i))) for i=0:n ] )
+    P=Q.basis
+    Δ=BlockedMatrix(Zeros((a,a)))
+    Δ_dim=blocksize(Δ)
+    for i=1:Δ_dim[1]
+        part_row_colection,antirow=addDistinctPartition(i-1)
+        #filter!(x -> all(y -> y >=2, x), part_row_colection)
+        for j=1:Δ_dim[2] 
+            part_col_colection,anticol=addDistinctPartition(j-1)
+            #filter!(x -> all(y -> y >=2, x), part_col_colection)
+            for ib=eachindex(part_row_colection)
+                part_row=part_row_colection[ib]::Vector{Int}
+                for  jb=eachindex(part_col_colection)
+                    part_col=part_col_colection[jb]::Vector{Int}
+                    #normalization
+                    view(Δ,Block(i,j))[ib,jb]=elementStiffMatrixLaplacianS3AntiAndInvariantBasis(part_row,part_col,P,antirow[ib],anticol[jb])
+                end
+            end
+        end
+        
+    end
+    Δ
 end
 
 
@@ -100,11 +166,6 @@ struct S3InvariantLaplacian{T,B} <: MultivariateOrthogonalPolynomial{3,T}
     basis::B
     D::BlockArray{T} # Laplacian
 end
-
-function getindex(Δ::S3InvariantLaplacian, X::SVector{3}, Kk::BlockIndex{1})
-
-end
-
 
 #=
 struct S3KronVector{T,D<:AbstractVector{T}} <: AbstractBlockVector{T}

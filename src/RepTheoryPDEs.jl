@@ -113,3 +113,32 @@ function cubevec2tens(C, N)
     end
     X
 end
+
+
+function S3AntiAndInvariantBasisPruner(n::Int)
+    alltups = vcat(([part for i in 0:n for part in addDistinctPartition(i)[1]]))
+
+    inds_o = findall(t -> isodd(sum(t)), alltups)
+    inds_e = findall(t -> iseven(sum(t)), alltups)
+    inds_parity=[inds_o;inds_e]
+
+    inds=[1:length(alltups)...]
+    inds_keep = findall(t -> t[1] >= 2 && t[2] >= 2 && t[3] >=2, alltups)
+
+    inds_keep_parity=filter(in(inds_keep),inds_parity)
+
+    Anti_mask=[part for i in 0:n for part in addDistinctPartition(i)[2]]
+    inds_Anti=findall(Anti_mask)
+    inds_Invar=filter(!in(inds_Anti),inds)
+    inds_keep_Anti=filter(in(inds_keep),inds_Anti)
+    inds_keep_Invar=filter(in(inds_keep),inds_Invar)
+    inds_keep_Invariance=[inds_keep_Anti;inds_keep_Invar]
+
+    inds_anti_odd=filter(in(inds_o),inds_keep_Anti)
+    inds_anti_even=filter(in(inds_e),inds_keep_Anti)
+    inds_Invar_odd=filter(in(inds_o),inds_keep_Invar)
+    inds_Invar_even=filter(in(inds_e),inds_keep_Invar)
+    inds_keep_Invariance_parity=[inds_anti_odd;inds_anti_even;inds_Invar_odd;inds_Invar_even]
+    vcat(([inds_keep],[inds_keep_Invariance]),
+    ([inds_keep_parity],[inds_keep_Invariance_parity]))
+end

@@ -3,7 +3,7 @@ import CairoMakie:spy!
 
 N=20
 
-alltups = vcat(([part.p for n in 0:N for part in Partition_2_parts(n)]))
+alltups = vcat(([part for n in 0:N for part in Partition_2_parts(n)]))
 inds_keep = findall(t -> t[1] >= 2 && t[2] >= 2, alltups)
 alltups_keep = alltups[inds_keep]
 inds_o = findall(t -> isodd(sum(t)), alltups)

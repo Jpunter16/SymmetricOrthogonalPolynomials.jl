@@ -37,9 +37,9 @@ function getLaplacianS2InvariantBasis(Q::S2Invariant, n::Int)
     Δ=BlockedMatrix(Zeros((a,a)))
     Δ_dim=blocksize(Δ)
 
-    for i=3:Δ_dim[1]
+    for i=1:Δ_dim[1]
         part_row_colection=Partition_2_parts(i-1)
-        for j=3:Δ_dim[2] 
+        for j=1:Δ_dim[2] 
             part_col_colection=Partition_2_parts(j-1)
             for ib=eachindex(part_row_colection)
                 part_row=part_row_colection[ib]
@@ -51,8 +51,8 @@ function getLaplacianS2InvariantBasis(Q::S2Invariant, n::Int)
                     norm_col = sqrt(2 + 2*(part_col[1]==part_col[2]))
                     view(Δ,Block(i,j))[ib,jb]=
                     2/(norm_row*norm_col) *
-                    (massPlusStiff(part_row.p,part_col.p,P)+massPlusStiff(part_row.p, reverse(part_col),P)
-                    +massPlusStiff(reverse(part_row),part_col.p,P)+massPlusStiff(reverse(part_row),reverse(part_col),P))
+                    (massPlusStiff(part_row,part_col,P)+massPlusStiff(part_row, reverse(part_col),P)
+                    +massPlusStiff(reverse(part_row),part_col,P)+massPlusStiff(reverse(part_row),reverse(part_col),P))
                 end
             end
         end

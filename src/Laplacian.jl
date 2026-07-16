@@ -73,6 +73,9 @@ function StiffMassSparseMult(p,q,P)
         end
         aux+=aux_i
     end
+    #if aux==0
+     #   error("calculated 0 entry")
+    #end
     aux
 end
 
@@ -87,11 +90,15 @@ function getLaplacianClosedForm(P,n::Int, dim::Int)
             aux=0.0
             for p_perm in keys(dict_part)
                 if haskey(dict_part[p_perm],adjacent_part[j])
-                    aux+=StiffMassSparseMult(p_perm,adjacent_part[j],P)
+                    for j_perm in dict_part[p_perm][adjacent_part[j]]
+                        aux+=StiffMassSparseMult(p_perm,j_perm,P)
+                    end
                 end
             end
-            #print(adjacent_part[j])
-            Δ[i,findfirst(x->x==adjacent_part[j], partitions)]=aux
+            j_ind=findfirst(x->x==adjacent_part[j], partitions)
+            N_dif_p=length(unique(partitions[i]))
+            N_dif_q=length(unique(adjacent_part[j]))
+            Δ[i,j_ind]=aux*(1/sqrt(N_dif_p*N_dif_q))
         end
     end
     Δ

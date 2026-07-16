@@ -6,7 +6,7 @@ N=20
 inds_keep,inds_decouple=S3AntiAndInvariantBasisPruner(N)[1]
 inds_keep_parity,inds_keep_Invariance_parity=S3AntiAndInvariantBasisPruner(N)[2]
 
-fig = Figure(size=(800,600))
+fig = Figure(size=(800,800))
 Axis(fig[1,1]; yreversed=true, title="Permutation and negation")
 
 Δ=(getLaplacianS3AntiAndInvariantBasis(S3Invariant((Ultraspherical(-0.5))),N))
@@ -25,7 +25,7 @@ Axis(fig[2,2]; yreversed=true, title="Invariant, Anti-Invariant and Negation ada
 
 spy!(Δ[inds_keep_Invariance_parity...,inds_keep_Invariance_parity...])
 
-str= "Sparsity of Laplace operator under S3 n=" * string(N) *".png"
+str= "Sparsity of Laplace operator under S3 Invariant and Anti-invariant n=" * string(N) *".png"
 
 
 save(str,fig)

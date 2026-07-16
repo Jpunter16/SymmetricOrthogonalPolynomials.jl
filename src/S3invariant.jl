@@ -79,7 +79,7 @@ getindex(Q::S3Invariant, 𝐱::SVector{3}, JR::BlockOneTo) = mortar([Q[𝐱,J] f
 function addDistinctPartition(i::Int)
     part=Partition_3_parts(i)
     j=1
-    anti=Bool[]
+    anti=Bool[] #indicates wether partition is an Anti-invariant polynomial or not
     while j<=length(part)
         if hasDistinctElements(part[j])
             insert!(part,j+1,part[j])
@@ -159,6 +159,7 @@ function getLaplacianS3AntiAndInvariantBasis(Q::S3Invariant, n::Int) #get krontr
     end
     Δ
 end
+
 
 
 

@@ -17,6 +17,8 @@ export Partition_3_parts, getLaplacianS2InvariantBasis, Partition_2_parts, Parti
 
 export DihedralInvariant, DihedralWeakLaplacian, S3Invariant, S2Invariant, get_Q, hasDistinctElements,S3AntiAndInvariantBasisPruner
 
+export getLaplacianClosedForm
+
 export cubeperm_inds
 
 include("dihedral.jl")
@@ -33,6 +35,7 @@ include("S3invariant.jl")
 include("S2Invariant.jl")
 include("cubeperm.jl")
 include("RepTheoryPDEs.jl")
+include("Laplacian.jl")
 
 
 

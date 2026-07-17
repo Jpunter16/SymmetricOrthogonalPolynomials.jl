@@ -1,67 +1,53 @@
-function nonZeroIndex(p,n_sum)
-    n=length(p)
+function computeDeltaComb(dim::Int)
     delta=[-2,0,2]
-    delta_comb=vec(collect(Iterators.product(fill(delta,n)...)))
+    delta_comb=vec(collect(Iterators.product(fill(delta,dim)...)))
     filter!(t->any(s->s==0,t),delta_comb)
-    p_adyacency=[p.+ collect(d) for d in delta_comb ]
-    p_ady_vec=unique(vec(p_adyacency))
+    delta_comb
+end
+
+function nonZeroIndex(p,n_sum,delta_comb)
+    p_adyacency=[p.+ d for d in delta_comb ]
+    p_ady_vec=unique(p_adyacency)
     filter!(t->all(s->s>=0,t),p_ady_vec)
     filter!(t->sum(t)<=n_sum,p_ady_vec)
 end
 
 function orderPartitions(v)
-    b=copy(v)
-    taken=falses(length(b))
-    Part_dict=Dict()
-    for i=eachindex(v)
-        if !taken[i]
-            perm=sort(b[i], rev=true)
-            reordered_perm=[b[i]]
-            for j=(i+1):length(b)
-                if sort(b[j],rev=true)==perm
-                    taken[j]=true
-                    push!(reordered_perm, b[j])
-                end
-            end
-            Part_dict[perm]=reordered_perm
+    Part_dict=Dict{Vector{Int},Vector{Vector{Int}}}()
+    for x in v
+        key=sort(x, rev=true)
+        if haskey(Part_dict, key)
+            push!(Part_dict[key], x)
+        else
+            Part_dict[key]=[x]
         end
     end
     Part_dict
 end
 
-function addDictionary(dict_o::Dict,dict_a::Dict)
-    dict_or=deepcopy(dict_o)
-    dict_add=deepcopy(dict_a)
-    for i in keys(dict_add) 
-        if haskey(dict_or, i)
-            push!(dict_or[i],dict_add[i]...)
-        else
-            dict_or[i]=dict_add[i]
-        end
-    end
-    dict_or
-end
-
-function getAdjacentPartitions(p,n)
-    perm=collect(permutations(p))
-    perm_uniq=unique(perm)
-    dict=Dict()
+function getAdjacentPartitions(p,n,delta_comb)
+    perm_uniq=collect(multiset_permutations(p,length(p)))
+    dict=Dict{Vector{Int},Dict{Vector{Int},Vector{Vector{Int}}}}()
     for i in eachindex(perm_uniq)
-        dict[perm_uniq[i]]=orderPartitions(nonZeroIndex(perm_uniq[i],n))
+        dict[perm_uniq[i]]=orderPartitions(nonZeroIndex(perm_uniq[i],n,delta_comb))
     end
     dict
 end
 
 function DistinctDictKeys(dict)
-    unique([keys_in for key in keys(dict) for keys_in in keys(dict[key])])
+    keys_set=Set{Vector{Int}}()
+    for key in keys(dict)
+        union!(keys_set,keys(dict[key]))
+    end
+    collect(keys_set)
 end
 
-function StiffMassSparseMult(p,q,P)
+function StiffMassSparseMult(p,q, mass_mat,stiff_mat)
     same_e=findall(p .==q)
     inner_prod_ind=collect(zip(p.+1,q.+1))
     aux=0.0
-    stiff_mat=(P'*diff(P,2))
-    mass_mat=(P'*P)
+    #stiff_mat=(P'*diff(P,2))
+    #mass_mat=(P'*P)
     for i in eachindex(same_e)
         aux_i=1.0 
         for j in eachindex(inner_prod_ind)
@@ -71,35 +57,52 @@ function StiffMassSparseMult(p,q,P)
                 aux_i*=mass_mat[inner_prod_ind[j]...]
             end
         end
+        #if aux_i==0
+        #   error("calculated 0 entry")
+        #end
         aux+=aux_i
     end
-    #if aux==0
-     #   error("calculated 0 entry")
-    #end
     aux
+end
+
+function makeDictInd(part_v::Vector{Vector{Int64}})
+    dic=Dict{Vector{Int},Int}()
+    for (i,el) in enumerate(part_v)
+        dic[el]=i
+    end
+    dic
 end
 
 function getLaplacianClosedForm(P,n::Int, dim::Int)
     partitions=[part for i=0:n for part in Partition_n_parts(i,dim)]
     n_len=length(partitions)
-    Δ=spzeros(n_len,n_len)
+    stiff_full = P' * diff(P, 2)
+    stiff_mat = Diagonal([stiff_full[i,i] for i in 1:n_len])
+    mass_mat = (P' * P)[1:n_len,1:n_len]
+    delta_comb = computeDeltaComb(dim)
+    I_idx=Int[]
+    J_idx=Int[]
+    V=Float64[]
+    dic=makeDictInd(partitions)
     for i=1:n_len
-        dict_part=getAdjacentPartitions(partitions[i],n)
+        dict_part=getAdjacentPartitions(partitions[i],n,delta_comb)
         adjacent_part=DistinctDictKeys(dict_part)
         for j in eachindex(adjacent_part)
             aux=0.0
             for p_perm in keys(dict_part)
                 if haskey(dict_part[p_perm],adjacent_part[j])
                     for j_perm in dict_part[p_perm][adjacent_part[j]]
-                        aux+=StiffMassSparseMult(p_perm,j_perm,P)
+                        aux+=StiffMassSparseMult(p_perm,j_perm,mass_mat,stiff_mat)
                     end
                 end
             end
-            j_ind=findfirst(x->x==adjacent_part[j], partitions)
+            j_ind=dic[adjacent_part[j]]
             N_dif_p=length(unique(partitions[i]))
             N_dif_q=length(unique(adjacent_part[j]))
-            Δ[i,j_ind]=aux*(1/sqrt(N_dif_p*N_dif_q))
+            push!(I_idx,i)
+            push!(J_idx,j_ind)
+            push!(V,aux*(1/sqrt(N_dif_p*N_dif_q)))
         end
     end
-    Δ
+    sparse(I_idx,J_idx,V,n_len,n_len)
 end

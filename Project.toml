@@ -1,7 +1,7 @@
 name = "SymmetricOrthogonalPolynomials"
 uuid = "fc9a72a9-1ea7-43f9-8932-c79acf841176"
 version = "0.1.0"
-authors = ["Sheehan Olver <solver@mac.com>"]
+authors = ["Sheehan Olver <solver@mac.com>","Jorge Punter Piquer <jorgepp423@gmail.com>"]
 
 [deps]
 ArrayLayouts = "4c555306-a7a7-4459-81d9-ec55ddd5c99a"

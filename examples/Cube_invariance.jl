@@ -43,7 +43,7 @@ length(inds_e) # 125
 inds_eo = [inds_o; inds_e]
 
 #ask about cubeperm_inds in original file (cubeperm.jl)
-fig = Figure(size=(600,300))
+fig = Figure(size=(800,400))
 Axis(fig[1,1]; yreversed=true, title="Reflection adapted")
 spy!(sparse(Matrix((L)[inds_eo, inds_eo])))
 Axis(fig[1,2]; yreversed=true, title="Permutation adapted")

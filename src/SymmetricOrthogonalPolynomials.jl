@@ -17,7 +17,7 @@ export Partition_3_parts, getLaplacianS2InvariantBasis, Partition_2_parts, Parti
 
 export DihedralInvariant, DihedralWeakLaplacian, S3Invariant, S2Invariant, get_Q, hasDistinctElements,S3AntiAndInvariantBasisPruner
 
-export getLaplacianClosedForm
+export getLaplacianClosedForm, orbitSize, laplacianCoeffs, partitionToInvariantEval, partitionToInvariantFunction
 
 export cubeperm_inds
 

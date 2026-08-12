@@ -181,6 +181,28 @@ function partitionToInvariantEval(X::Vector{Float64},α::Vector{Int}, neg::Bool)
     auX
 end
 
+function partitionToInvariantFunction(α::Vector{Int}, neg::Bool)
+    n=length(α)
+    if neg
+    P=Ultraspherical(-0.5)[:, 3:end]
+    else
+       P=Ultraspherical(1.5) 
+    end
+    perms = collect(multiset_permutations(α, n))
+    return X::AbstractVector -> begin
+        @assert length(X) == n "Expected vector of length $n"
+        auX=0.0
+        for i in eachindex(perms)
+            auXm=1.0
+            for j in 1:n
+                auXm*= P[X[j], perms[i][j] + 1]
+            end
+            auX += auXm
+        end
+        auX
+    end
+end
+
 function laplacianFiniteDiff3D(X::Vector{Float64},α::Vector{Int},h::Float64)
     u(x)=partitionToInvariantEval(x,α,true)
     (u([X[1]+h,X[2],X[3]])+u([X[1]-h,X[2],X[3]])+u([X[1],X[2]+h,X[3]])

@@ -112,9 +112,9 @@ end
 ### Other Way
 
 # 3-term connection -W_n = ...
-splus1(n) = -1 // ((2n + 3) * (2n + 5))
-s0(n) =   2 // ((2n + 1) * (2n + 5))
-sminus1(n) = -1 // ((2n + 1) * (2n + 3))
+splus1(n::Int) = -1 / ((2n + 3) * (2n + 5))
+s0(n::Int) =   2 / ((2n + 1) * (2n + 5))
+sminus1(n::Int) = -1 / ((2n + 1) * (2n + 3))
 
 # |Stab(μ)| = ∏ mult! (zeros count as slots)
 stab(μ) = prod(factorial(count(==(v), μ)) for v in unique(μ))
@@ -153,32 +153,66 @@ function laplacianCoeffs(α::Vector{Int}, normalized::Bool = false)
     if normalized
         α_norm=1/sqrt(orbitSize(α))
         μ_norm= Dict(μ => 1/sqrt(orbitSize(μ)) for μ in collect(keys(buckets)) )
-        Dict(μ => α_norm* μ_norm[μ]* stab(μ) * w for (μ, w) in buckets if !iszero(w))
+        Dict(μ => -α_norm* μ_norm[μ]* stab(μ) * w for (μ, w) in buckets if !iszero(w))
     else
         Dict(μ => -stab(μ) * w for (μ, w) in buckets if !iszero(w))
     end
 end
 
+laplacianCoeffs([4,2],false)
+
 
 #laplacianCoeffs([9,8,7,6,5,4,3,2,0])
+
+# Both functions below compute
+#   F(X) = sum over DISTINCT permutations p of α of  prod_j P[X[j], p[j]+1]
+# which is exactly a matrix permanent with repeated columns (columns
+# indexed by the multiset α, rows by the coordinates X). The original
+# implementation enumerated the full orbit via multiset_permutations,
+# costing O(orbitSize(α)*n) with orbitSize(α) = n!/stab(α) -- this blows
+# up combinatorially (up to n!) for partitions with many distinct parts.
+#
+# orbitSumDP computes the same sum via a DP over rows, whose state tracks
+# how many copies of each DISTINCT value in α have been used so far
+# (bounded by that value's multiplicity). State space size is
+# prod(multiplicity_i + 1), which stays small whenever α is dominated by
+# repeated entries (very common here, since a bounded total degree spread
+# over many coordinates forces most parts to be zero) -- turning an
+# up-to-factorial blow-up into something close to linear/low-polynomial
+# in the number of coordinates.
+function orbitSumDP(P, X::AbstractVector, vals::Vector{Int}, mult::Vector{Int}, n::Int)
+    r = length(vals)
+    dims = Tuple(m + 1 for m in mult)
+    D = zeros(Float64, dims)
+    D[ntuple(_ -> 1, r)...] = 1.0
+    Dnew = similar(D)
+    for j in 1:n
+        fill!(Dnew, 0.0)
+        for idx in CartesianIndices(D)
+            v = D[idx]
+            v == 0.0 && continue
+            for k in 1:r
+                if idx[k] <= mult[k]   # capacity remains for value vals[k]
+                    t = Base.setindex(Tuple(idx), idx[k] + 1, k)
+                    Dnew[t...] += v * P[X[j], vals[k] + 1]
+                end
+            end
+        end
+        D, Dnew = Dnew, D
+    end
+    D[ntuple(k -> mult[k] + 1, r)...]
+end
 
 function partitionToInvariantEval(X::Vector{Float64},α::Vector{Int}, neg::Bool)
     n=length(α)
     if neg
     P=Ultraspherical(-0.5)[:, 3:end]
     else
-       P=Ultraspherical(1.5) 
+       P=Ultraspherical(1.5)
     end
-    perms = collect(multiset_permutations(α, n))
-    auX=0.0
-    for i in eachindex(perms)
-        auXm=1.0
-        for j in 1:n
-            auXm*= P[X[j], perms[i][j] + 1]
-        end
-        auX += auXm
-    end
-    auX
+    vals = sort(unique(α); rev = true)
+    mult = [count(==(v), α) for v in vals]
+    orbitSumDP(P, X, vals, mult, n)
 end
 
 function partitionToInvariantFunction(α::Vector{Int}, neg::Bool)
@@ -186,20 +220,38 @@ function partitionToInvariantFunction(α::Vector{Int}, neg::Bool)
     if neg
     P=Ultraspherical(-0.5)[:, 3:end]
     else
-       P=Ultraspherical(1.5) 
+       P=Ultraspherical(1.5)
     end
-    perms = collect(multiset_permutations(α, n))
+    vals = sort(unique(α); rev = true)
+    mult = [count(==(v), α) for v in vals]
+    r = length(vals)
+    dims = Tuple(m + 1 for m in mult)
+    # Buffers allocated ONCE and reused across every call to the returned
+    # closure, instead of fresh on every call -- this closure exists
+    # specifically to be evaluated repeatedly at many different X (e.g.
+    # over a whole evaluation grid), so per-call allocation was pure
+    # overhead paid on every single point.
+    D = zeros(Float64, dims)
+    Dnew = similar(D)
     return X::AbstractVector -> begin
         @assert length(X) == n "Expected vector of length $n"
-        auX=0.0
-        for i in eachindex(perms)
-            auXm=1.0
-            for j in 1:n
-                auXm*= P[X[j], perms[i][j] + 1]
+        fill!(D, 0.0)
+        D[ntuple(_ -> 1, r)...] = 1.0
+        for j in 1:n
+            fill!(Dnew, 0.0)
+            for idx in CartesianIndices(D)
+                v = D[idx]
+                v == 0.0 && continue
+                for k in 1:r
+                    if idx[k] <= mult[k]
+                        t = Base.setindex(Tuple(idx), idx[k] + 1, k)
+                        Dnew[t...] += v * P[X[j], vals[k] + 1]
+                    end
+                end
             end
-            auX += auXm
+            D, Dnew = Dnew, D
         end
-        auX
+        D[ntuple(k -> mult[k] + 1, r)...]
     end
 end
 
@@ -219,7 +271,4 @@ function LapCoefftoEval(X::Vector{Float64},α::Vector{Int})
     aux
 end
 
-X=[0.1,0.2,0.3]
-alpha=[3,2,1]
-h=0.001
-laplacianFiniteDiff3D(X,alpha,h)-LapCoefftoEval(X,alpha)
+laplacianCoeffs([3,2,1],false)

@@ -33,7 +33,7 @@ V = (X-Y)^2 + (Y-Z)^2 + (X-Z)^2
 
 L = -Δ + V
 
-Q=get_Q(N)
+Q=get_Q_S3(N)
 inds = cubeperm_inds(N)
 
 alltups = vcat((lextuples(n) for n=1:N)...)

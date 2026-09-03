@@ -15,9 +15,9 @@ export cuberepresentation, cube_filter, lextuples, lextuples2
 
 export Partition_3_parts, getLaplacianS2InvariantBasis, Partition_2_parts, PartitionVectorToVector,getLaplacianS3AntiAndInvariantBasis, Partition_n_parts
 
-export DihedralInvariant, DihedralWeakLaplacian, S3Invariant, S2Invariant, get_Q, hasDistinctElements,S3AntiAndInvariantBasisPruner
+export DihedralInvariant, DihedralWeakLaplacian, S3Invariant, S2Invariant, get_Q_S3, hasDistinctElements,S3AntiAndInvariantBasisPruner, S3perm_gen1, S3perm_gen2, perm_inds
 
-export getLaplacianClosedForm, orbitSize, laplacianCoeffs, partitionToInvariantEval, partitionToInvariantFunction
+export getLaplacianClosedForm, orbitSize, laplacianCoeffs, partitionToInvariantEval, partitionToInvariantFunction, makeDictInd, LaplacianMat
 
 export cubeperm_inds
 

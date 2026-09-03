@@ -26,7 +26,7 @@ function make_second_transposition_S3(v)
     vec
 end
 
-function get_B(N::Int)
+function S3perm_gen2(N::Int)
     dim=Int(N*(N+1)/2)
     B = Matrix{Int8}(zeros( dim, dim))
     basis_vector_indices=check_indices(N)
@@ -51,7 +51,7 @@ function make_first_transposition_S3(v)
     vec
 end
 
-function get_A(N::Int)
+function S3perm_gen1(N::Int)
     dim=Int(N*(N+1)/2)
     A = Matrix{Int8}(zeros( dim, dim))
     basis_vector_indices=check_indices(N)
@@ -68,12 +68,12 @@ function get_A(N::Int)
     A
 end
 
-function get_Q(n::Int)
+function get_Q_S3(n::Int)
     N=1:n
     nrows= Int.(N .*(N .+1) ./2)
     block_diagonals = [Matrix{Float64}(undef, nrows[i], nrows[i]) for i  in 1:n]
     for i=N
-        rep= Representation{SparseMatrixCSC{Float64, Int64}}(SparseMatrixCSC{Float64, Int64}[get_A(i),get_B(i)])
+        rep= Representation{SparseMatrixCSC{Float64, Int64}}(SparseMatrixCSC{Float64, Int64}[S3perm_gen1(i),S3perm_gen2(i)])
         lam,Q=blockdiagonalize(rep)
         block_diagonals[i]=Q
     end

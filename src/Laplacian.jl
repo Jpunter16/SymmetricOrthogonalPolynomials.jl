@@ -48,8 +48,6 @@ function StiffMassSparseMult(p,q, mass_mat,stiff_mat)
     same_e=findall(p .==q)
     inner_prod_ind=collect(zip(p.+1,q.+1))
     auX=0.0
-    #stiff_mat=(P'*diff(P,2))
-    #mass_mat=(P'*P)
     for i in eachindeX(same_e)
         auX_i=1.0 
         for j in eachindeX(inner_prod_ind)
@@ -59,9 +57,6 @@ function StiffMassSparseMult(p,q, mass_mat,stiff_mat)
                 auX_i*=mass_mat[inner_prod_ind[j]...]
             end
         end
-        #if auX_i==0
-        #   error("calculated 0 entry")
-        #end
         auX+=auX_i
     end
     auX
@@ -75,6 +70,7 @@ function makeDictInd(part_v::Vector{Vector{Int64}})
     dic
 end
 
+#Deprecated way, see function laplacianCoeffs
 function getLaplacianClosedForm(P,n::Int, dim::Int)
     partitions=[part for i=0:n for part in Partition_n_parts(i,dim)]
     n_len=length(partitions)
@@ -111,15 +107,15 @@ end
 
 ### Other Way
 
-# 3-term connection -W_n = ...
+# 3-term connection formulas
 splus1(n::Int) = -1 / ((2n + 3) * (2n + 5))
 s0(n::Int) =   2 / ((2n + 1) * (2n + 5))
 sminus1(n::Int) = -1 / ((2n + 1) * (2n + 3))
 
-# |Stab(μ)| = ∏ mult! (zeros count as slots)
+
 stab(μ) = prod(factorial(count(==(v), μ)) for v in unique(μ))
 
-# admissible (up,stay,down), up+stay+down = m: shift 2/0/-2 needs degree >= 0/0/2
+# admissible (up,stay,down)
 comps(v, m) = [(up, stay, m - up - stay) for up in 0:m for stay in 0:(m - up)
                if (m - up - stay == 0 || v >= 2)]
 
@@ -127,8 +123,8 @@ comps(v, m) = [(up, stay, m - up - stay) for up in 0:m for stay in 0:(m - up)
 orbitSize(α::Vector{Int}) =factorial(length(α)) ÷ stab(α)
 
 function laplacianCoeffs(α::Vector{Int}, normalized::Bool = false)
-    vals = sort(unique(α); rev = true)                 # distinct parts v₁ > … > v_r
-    mult = Dict(v => count(==(v), α) for v in vals)    # multiplicities m_u
+    vals = sort(unique(α); rev = true)                 
+    mult = Dict(v => count(==(v), α) for v in vals)    
 
     buckets = Dict{Vector{Int}, Float64}()
 
@@ -159,50 +155,6 @@ function laplacianCoeffs(α::Vector{Int}, normalized::Bool = false)
     end
 end
 
-laplacianCoeffs([4,2],false)
-
-
-#laplacianCoeffs([9,8,7,6,5,4,3,2,0])
-
-# Both functions below compute
-#   F(X) = sum over DISTINCT permutations p of α of  prod_j P[X[j], p[j]+1]
-# which is exactly a matrix permanent with repeated columns (columns
-# indexed by the multiset α, rows by the coordinates X). The original
-# implementation enumerated the full orbit via multiset_permutations,
-# costing O(orbitSize(α)*n) with orbitSize(α) = n!/stab(α) -- this blows
-# up combinatorially (up to n!) for partitions with many distinct parts.
-#
-# orbitSumDP computes the same sum via a DP over rows, whose state tracks
-# how many copies of each DISTINCT value in α have been used so far
-# (bounded by that value's multiplicity). State space size is
-# prod(multiplicity_i + 1), which stays small whenever α is dominated by
-# repeated entries (very common here, since a bounded total degree spread
-# over many coordinates forces most parts to be zero) -- turning an
-# up-to-factorial blow-up into something close to linear/low-polynomial
-# in the number of coordinates.
-function orbitSumDP(P, X::AbstractVector, vals::Vector{Int}, mult::Vector{Int}, n::Int)
-    r = length(vals)
-    dims = Tuple(m + 1 for m in mult)
-    D = zeros(Float64, dims)
-    D[ntuple(_ -> 1, r)...] = 1.0
-    Dnew = similar(D)
-    for j in 1:n
-        fill!(Dnew, 0.0)
-        for idx in CartesianIndices(D)
-            v = D[idx]
-            v == 0.0 && continue
-            for k in 1:r
-                if idx[k] <= mult[k]   # capacity remains for value vals[k]
-                    t = Base.setindex(Tuple(idx), idx[k] + 1, k)
-                    Dnew[t...] += v * P[X[j], vals[k] + 1]
-                end
-            end
-        end
-        D, Dnew = Dnew, D
-    end
-    D[ntuple(k -> mult[k] + 1, r)...]
-end
-
 function partitionToInvariantEval(X::Vector{Float64},α::Vector{Int}, neg::Bool)
     n=length(α)
     if neg
@@ -226,11 +178,6 @@ function partitionToInvariantFunction(α::Vector{Int}, neg::Bool)
     mult = [count(==(v), α) for v in vals]
     r = length(vals)
     dims = Tuple(m + 1 for m in mult)
-    # Buffers allocated ONCE and reused across every call to the returned
-    # closure, instead of fresh on every call -- this closure exists
-    # specifically to be evaluated repeatedly at many different X (e.g.
-    # over a whole evaluation grid), so per-call allocation was pure
-    # overhead paid on every single point.
     D = zeros(Float64, dims)
     Dnew = similar(D)
     return X::AbstractVector -> begin
@@ -271,4 +218,25 @@ function LapCoefftoEval(X::Vector{Float64},α::Vector{Int})
     aux
 end
 
-laplacianCoeffs([3,2,1],false)
+function LaplacianMat(N::Int,dim::Int)
+    parts=reduce(vcat, Partition_n_parts(i,dim) for i in 0:N-1)
+    dict_ind = makeDictInd(parts)
+    n_len=length(parts)
+    diag_11=[ 2/(2*n+3) for n=0:N-1]
+    I = Int[]; J = Int[]; V = Float64[]
+    for i in eachindex(parts)
+        lapcof=laplacianCoeffs(parts[i])
+        for j in keys(lapcof)
+            if sum(j)<=N-1
+                w=lapcof[j]
+                for part_i in eachindex(j)
+                    w*= diag_11[j[part_i]+1]
+                end
+                push!(I, i)
+                push!(J, dict_ind[j])
+                push!(V,w)
+            end
+        end
+    end
+    sparse(I,J,V,n_len,n_len)
+end

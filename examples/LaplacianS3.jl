@@ -7,9 +7,9 @@ inds_keep,inds_decouple=S3AntiAndInvariantBasisPruner(N)[1]
 inds_keep_parity,inds_keep_Invariance_parity=S3AntiAndInvariantBasisPruner(N)[2]
 
 fig = Figure(size=(800,800))
-Axis(fig[1,1]; yreversed=true, title="Permutation and negation")
+Axis(fig[1,1]; yreversed=true, title="Symmetric and alternating orthogonal polynomials")
 
-Δ=(getLaplacianS3AntiAndInvariantBasis(S3Invariant((Ultraspherical(-0.5))),N))
+Δ=(getLaplacianS3AntiAndInvariantBasis(N))
 
 Δ[abs.(Δ) .< 1e-16] .= 0
 

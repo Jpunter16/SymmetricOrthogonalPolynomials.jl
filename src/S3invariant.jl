@@ -56,19 +56,6 @@ function getindex(Q::S3Invariant, 𝐱::SVector{3}, Kk::BlockIndex{1})
         total = total + mult
     end
     norm * total
-
-    #=num_diff=(ℓ==μ)+(ℓ==ρ)+(μ==ρ)
-
-    (P[x,ℓ+1]*P[y,μ+1]*P[z, ρ+1]+
-    P[x,ℓ+1]*P[z,μ+1]*P[y, ρ+1]+
-    P[z,ℓ+1]*P[y,μ+1]*P[x, ρ+1]+
-    P[y,ℓ+1]*P[x,μ+1]*P[z, ρ+1]+
-    P[z,ℓ+1]*P[x,μ+1]*P[y, ρ+1]+
-    P[y,ℓ+1]*P[z,μ+1]*P[x, ρ+1])/sqrt(6+3*num_diff^2+num_diff) =#
-
-    #Ask about normalization
-
-    #(Q.basis[x,ℓ+1]Q.basis[y,μ+1]+Q.basis[x,μ+1]Q.basis[y,ℓ+1])/sqrt(2 + 2*(ℓ == μ)) # scaling is to ensure unitary change-of-basis
 end
 
 getindex(Q::S3Invariant, 𝐱::SVector{3}, k::Int) = Q[𝐱,findblockindex(axes(Q,2),k)]
@@ -135,17 +122,15 @@ end
 
 
 
-function getLaplacianS3AntiAndInvariantBasis(Q::S3Invariant, n::Int) #get krontrav matrices
+function getLaplacianS3AntiAndInvariantBasis(n::Int)
     a = blockedrange(round.(Int,(((0:n) .+3).^2)./12) .+[sum(map(t->hasDistinctElements(t),Partition_3_parts(i))) for i=0:n ] )
-    P=Q.basis
+    P=Ultraspherical(-0.5)
     Δ=BlockedMatrix(Zeros((a,a)))
     Δ_dim=blocksize(Δ)
     for i=1:Δ_dim[1]
         part_row_colection,antirow=addDistinctPartition(i-1)
-        #filter!(x -> all(y -> y >=2, x), part_row_colection)
         for j=1:Δ_dim[2] 
             part_col_colection,anticol=addDistinctPartition(j-1)
-            #filter!(x -> all(y -> y >=2, x), part_col_colection)
             for ib=eachindex(part_row_colection)
                 part_row=part_row_colection[ib]::Vector{Int}
                 for  jb=eachindex(part_col_colection)
@@ -167,7 +152,6 @@ struct S3InvariantLaplacian{T,B} <: MultivariateOrthogonalPolynomial{3,T}
     basis::B
     D::BlockArray{T} # Laplacian
 end
-
 #=
 struct S3KronVector{T,D<:AbstractVector{T}} <: AbstractBlockVector{T}
     d::D

@@ -142,3 +142,46 @@ function S3AntiAndInvariantBasisPruner(n::Int)
     vcat(([inds_keep],[inds_keep_Invariance]),
     ([inds_keep_parity],[inds_keep_Invariance_parity]))
 end
+
+perm_representation(n)=Representation([S3perm_gen1(n),S3perm_gen2(n)])
+
+# find all indices for irrep with partition p and SYT corresponding to j
+function _perm_filter!(ret, p, n, j)
+    λ = multiplicities(perm_representation(n)) # mults of all irreps
+    kys = sort!(collect(keys(λ))) # sort partitions present
+    ind = 0
+    for k in kys # for each irrep
+        m = hooklength(k) # dimension of irrep
+        if k == p # the ones we care about
+            @assert 1 ≤ j ≤ m
+            ret[StepRangeLen(ind+j, m, λ[k])] .= true # only take every m row up to the given multiplicity
+            return ret
+        else
+            ind += λ[k]*m
+        end
+    end
+    ret
+end
+
+function perm_filter((p), N, j...)
+    # vector of 0 or 1 determining which indices are in the irrep corresponding to partition p and SYT given by j
+    # up to degree N-1
+    ret = zeros(Bool, binomial(N+3,3))
+    ind = 0
+    for n = 1:N # degree n-1 polynomials
+        M = binomial(n+1,2) # dim of degree n-1 polys
+        _perm_filter!(view(ret, ind+1:ind+M), p, n, j...) # populate degree n-1 case
+        ind += M
+    end
+    ret
+end
+
+function perm_inds(N)
+    inds = Int[]
+    for p in NumericalRepresentationTheory.partitions(3)
+        for j = 1:hooklength(p)
+            append!(inds, findall(perm_filter((p), N, j)))
+        end
+    end
+    inds
+end

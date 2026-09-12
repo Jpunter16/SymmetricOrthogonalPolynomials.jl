@@ -2,18 +2,18 @@ using SparseArrays, BlockDiagonals
 
 function check_indices(N::Int)
     A = Matrix{Int8}(undef, 0, 3)
-    for n=1:N
+    for n = 1:N
         iter=1
-        for i=reverse(1:n)
+        for i in reverse(1:n)
             k=0
-            for j=reverse(1:(n-i+1)) 
+            for j in reverse(1:(n-i+1))
                 k+=1
-                A=vcat(A, [i-1,j-1,k-1]')
+                A=vcat(A, [i-1, j-1, k-1]')
                 iter+=1
             end
         end
     end
-    collect(eachrow(A))[end-Int(N*(N+1)/2)+1:end,:]
+    collect(eachrow(A))[(end-Int(N*(N+1)/2)+1):end, :]
 end
 
 check_indices(2)
@@ -28,12 +28,12 @@ end
 
 function S3perm_gen2(N::Int)
     dim=Int(N*(N+1)/2)
-    B = Matrix{Int8}(zeros( dim, dim))
+    B = Matrix{Int8}(zeros(dim, dim))
     basis_vector_indices=check_indices(N)
     permuted_vector=map(make_second_transposition_S3, basis_vector_indices)
-    for i=1:size(B,1)
-        pos = findfirst(row -> row == permuted_vector[i,:], eachrow(basis_vector_indices))
-        if pos !=Nothing
+    for i = 1:size(B, 1)
+        pos = findfirst(row -> row == permuted_vector[i, :], eachrow(basis_vector_indices))
+        if pos != Nothing
             B[i, pos]=1
         else
             error("Permutated vector not found")
@@ -53,12 +53,12 @@ end
 
 function S3perm_gen1(N::Int)
     dim=Int(N*(N+1)/2)
-    A = Matrix{Int8}(zeros( dim, dim))
+    A = Matrix{Int8}(zeros(dim, dim))
     basis_vector_indices=check_indices(N)
     permuted_vector=map(make_first_transposition_S3, basis_vector_indices)
-    for i=1:size(A,1)
-        pos = findfirst(row -> row == permuted_vector[i,:], eachrow(basis_vector_indices))
-        if pos !=Nothing
+    for i = 1:size(A, 1)
+        pos = findfirst(row -> row == permuted_vector[i, :], eachrow(basis_vector_indices))
+        if pos != Nothing
             A[i, pos]=1
         else
             error("Permutated vector not found")
@@ -70,11 +70,13 @@ end
 
 function get_Q_S3(n::Int)
     N=1:n
-    nrows= Int.(N .*(N .+1) ./2)
-    block_diagonals = [Matrix{Float64}(undef, nrows[i], nrows[i]) for i  in 1:n]
-    for i=N
-        rep= Representation{SparseMatrixCSC{Float64, Int64}}(SparseMatrixCSC{Float64, Int64}[S3perm_gen1(i),S3perm_gen2(i)])
-        lam,Q=blockdiagonalize(rep)
+    nrows = Int.(N .* (N .+ 1) ./ 2)
+    block_diagonals = [Matrix{Float64}(undef, nrows[i], nrows[i]) for i = 1:n]
+    for i in N
+        rep = Representation{SparseMatrixCSC{Float64,Int64}}(
+            SparseMatrixCSC{Float64,Int64}[S3perm_gen1(i), S3perm_gen2(i)],
+        )
+        lam, Q=blockdiagonalize(rep)
         block_diagonals[i]=Q
     end
     Block_Q=BlockDiagonal(block_diagonals)

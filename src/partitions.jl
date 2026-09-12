@@ -6,7 +6,7 @@ function _validate_partition(p, len::Int)
     if length(p)!=len
         error("vector should be of length $len")
     end
-    if !issorted(p; lt=Base.:>)
+    if !issorted(p; lt = Base.:>)
         error("input vector $p should be sorted")
     end
     if !all(x -> x >= 0, p)
@@ -14,7 +14,7 @@ function _validate_partition(p, len::Int)
     end
 end
 
-struct Partition3 <:PartitionGeneralized
+struct Partition3 <: PartitionGeneralized
     p::Vector{Int}
     function Partition3(p)
         _validate_partition(p, 3)
@@ -22,7 +22,7 @@ struct Partition3 <:PartitionGeneralized
     end
 end
 
-struct Partition2 <:PartitionGeneralized
+struct Partition2 <: PartitionGeneralized
     p::Vector{Int}
     function Partition2(p)
         _validate_partition(p, 2)
@@ -32,7 +32,7 @@ end
 
 function Partition_3_parts(n::Int)
     if n==0
-        return [Partition3([0,0,0]).p]
+        return [Partition3([0, 0, 0]).p]
     else
         parts = collect(Combinatorics.partitions(n))
         parts = filter(p -> length(p) <= 3, parts)
@@ -42,7 +42,7 @@ end
 
 function Partition_2_parts(n::Int)
     if n==0
-        return [Partition2([0,0]).p]
+        return [Partition2([0, 0]).p]
     else
         parts = collect(Combinatorics.partitions(n))
         parts = filter(p -> length(p) <= 2, parts)
@@ -50,9 +50,9 @@ function Partition_2_parts(n::Int)
     end
 end
 
-struct PartitionN{M} <:PartitionGeneralized
+struct PartitionN{M} <: PartitionGeneralized
     p::Vector{Int}
-    function PartitionN{M}(p) where M
+    function PartitionN{M}(p) where {M}
         _validate_partition(p, M)
         new{M}(p)
     end
@@ -68,7 +68,7 @@ function Partition_n_parts(n::Int, m::Int)
     end
 end
 
-function getindex(p::PartitionGeneralized,n::Int)
+function getindex(p::PartitionGeneralized, n::Int)
     p.p[n]
 end
 
@@ -76,8 +76,11 @@ function PartitionVectorToVector(Partitionv::Vector{<:PartitionGeneralized})
     [part.p for part in Partitionv]
 end
 
-function Base.convert(::Type{NumericalRepresentationTheory.Partition}, y::PartitionGeneralized)
-    NumericalRepresentationTheory.Partition(filter(t->t !=0, y.p))
+function Base.convert(
+    ::Type{NumericalRepresentationTheory.Partition},
+    y::PartitionGeneralized,
+)
+    NumericalRepresentationTheory.Partition(filter(t->t != 0, y.p))
 end
 
 function Base.reverse(p::PartitionGeneralized)

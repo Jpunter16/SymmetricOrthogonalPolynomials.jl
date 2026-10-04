@@ -113,6 +113,16 @@ s0(n::Int) = 2 / ((2n + 1) * (2n + 5))
 sminus1(n::Int) = -1 / ((2n + 1) * (2n + 3))
 
 
+function s(option::Int, value::Int)
+    if option==1
+        return splus1(value)
+    elseif option==0
+        return s0(value)
+    elseif option==-1
+        return sminus1(value)
+    end
+end
+
 stab(μ) = prod(factorial(count(==(v), μ)) for v in unique(μ))
 
 # admissible (up,stay,down)
@@ -156,6 +166,67 @@ function laplacianCoeffs(α::Vector{Int}, normalized::Bool = false)
     else
         Dict(μ => -stab(μ) * w for (μ, w) in buckets if !iszero(w))
     end
+end
+
+function laplacianCoeffsAlter(α::Vector{Int}, normalized::Bool = false)
+    if length(unique(α))==length(α)
+        buckets = Dict{Vector{Int},Float64}()
+        d=length(α)
+        for i in eachindex(α)
+            for k in Iterators.product(ntuple(_ -> -1:1, d-1)...)
+                k=(k[1:i-1]..., 1000, k[i:end]... ) #the 1000 value is not used in the implementation, it just corresponds to the differentiated slot that is already in the positive ultrasphericals
+                mu = copy(α)
+                for ki in eachindex(k)
+                    if i !=ki
+                        mu[ki]+=2*k[ki]
+                    end
+                end
+                if all(t-> t>=0, mu)
+                    if length(mu)==length(unique(mu)) #check valid alternating partition (all parts distinct)
+                        pmu = sortperm(mu, rev=true)
+                        T=0.0
+                        q = invperm(sortperm(pmu))  
+                        sig=levicivita(q)
+                        aux=1.0
+                        for ki in eachindex(k)
+                            if i !=ki
+                                aux*=s(k[ki],α[ki])
+                            end
+                        end
+                        T+=sig*aux
+                        buckets[mu[pmu]] = get(buckets, mu[pmu], 0 / 1) + T
+                    end
+                end
+            end
+        end
+    end
+    for key in keys(buckets) #change sign according to the differentiation rule
+        buckets[key]=-buckets[key]
+    end
+    buckets
+end
+
+function TensorEval(α::Vector{Int},X::Vector{Float64}, neg::Bool)
+    if neg
+        C=Ultraspherical(-0.5)[:,3:end]
+    else
+        C=Ultraspherical(1.5)
+    end
+    aux=1.0
+    for i in eachindex(α)
+        aux*=C[X[i],α[i]+1]
+    end
+    aux
+end
+
+function AlterEval(α::Vector{Int},X::Vector{Float64}, neg::Bool)
+    perms=collect(multiset_permutations(α))
+    res=0.0
+    for p in perms
+        p_sort=invperm(sortperm(p, rev=true))
+        res+=levicivita(p_sort)*TensorEval(p, X, neg)
+    end
+    res
 end
 
 function partitionToInvariantEval(X::Vector{Float64}, α::Vector{Int}, neg::Bool)
@@ -217,6 +288,31 @@ function laplacianFiniteDiff3D(X::Vector{Float64}, α::Vector{Int}, h::Float64)
     )/(h^2)
 end
 
+function laplacianFiniteDiff3DAlter(X::Vector{Float64}, α::Vector{Int}, h::Float64)
+    u(x) = AlterEval(α, x, true)
+    (
+        u([X[1]+h, X[2], X[3]]) +
+        u([X[1]-h, X[2], X[3]]) +
+        u([X[1], X[2]+h, X[3]]) +
+        u([X[1], X[2]-h, X[3]]) +
+        u([X[1], X[2], X[3]+h]) +
+        u([X[1], X[2], X[3]-h]) - 6*u([X[1], X[2], X[3]])
+    )/(h^2)
+end
+
+function LapCoeffToAlter(α::Vector{Int64},X::Vector{Float64})
+    dic=laplacianCoeffsAlter(α)
+    aux=0.0
+    for i in keys(dic) 
+        aux+=dic[i]*AlterEval(i, X, false)
+    end
+    aux
+end
+
+function LaplacianErrorAlter(α::Vector{Int64},X::Vector{Float64}, h::Float64)
+    abs(LapCoeffToAlter(α, X)-laplacianFiniteDiff3DAlter(X, α, h))
+end
+
 function LapCoefftoEval(X::Vector{Float64}, α::Vector{Int})
     dic=laplacianCoeffs(α, false)
     aux=0.0
@@ -249,4 +345,8 @@ function LaplacianMat(N::Int, dim::Int)
         end
     end
     sparse(I, J, V, n_len, n_len)
+end
+
+for h in [0.1,0.01,0.001]
+    println(LaplacianErrorAlter([5,4,3],[0.1,0.2,0.3],h))
 end

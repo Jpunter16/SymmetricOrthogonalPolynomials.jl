@@ -38,7 +38,8 @@ export Partition_3_parts,
     Partition_2_parts,
     PartitionVectorToVector,
     getLaplacianS3AntiAndInvariantBasis,
-    Partition_n_parts
+    Partition_n_parts,
+    Partition_diff_n_parts
 
 export DihedralInvariant,
     DihedralWeakLaplacian,

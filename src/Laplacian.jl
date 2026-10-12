@@ -346,7 +346,3 @@ function LaplacianMat(N::Int, dim::Int)
     end
     sparse(I, J, V, n_len, n_len)
 end
-
-for h in [0.1,0.01,0.001]
-    println(LaplacianErrorAlter([5,4,3],[0.1,0.2,0.3],h))
-end

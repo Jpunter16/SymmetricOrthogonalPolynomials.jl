@@ -68,6 +68,17 @@ function Partition_n_parts(n::Int, m::Int)
     end
 end
 
+function Partition_diff_n_parts(n::Int, m::Int)
+    if n==0
+        Parts=[PartitionN{m}(zeros(Int, m)).p]
+    else
+        parts = collect(Combinatorics.partitions(n))
+        parts = filter(p -> length(p) <= m, parts)
+        Parts=[PartitionN{m}(vcat(p, zeros(Int, m - length(p)))).p for p in parts]
+    end
+    filter!(p-> length(p)==length(unique(p)), Parts)
+end
+
 function getindex(p::PartitionGeneralized, n::Int)
     p.p[n]
 end

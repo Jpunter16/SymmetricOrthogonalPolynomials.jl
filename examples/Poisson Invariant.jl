@@ -1,12 +1,5 @@
 using ClassicalOrthogonalPolynomials, Combinatorics, SymmetricOrthogonalPolynomials, SparseArrays, Plots, CairoMakie, Printf
 
-function RHS(dim::Int)
-    return X::AbstractVector -> begin
-        @assert length(X)==dim "Expected lenght $dim"
-        -dim*pi^2*prod([sinpi(x) for x in X])
-    end
-end
-
 function uExact(dim::Int)
     return X::AbstractVector -> begin
         @assert length(X)==dim "Expected lenght $dim"

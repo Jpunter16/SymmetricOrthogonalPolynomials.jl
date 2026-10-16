@@ -49,7 +49,7 @@ function ConvMatInvar(N::Int, dim::Int)
         lapcof=conversionCoeffs(parts[i]) #name of lapcof is not representative
         for j in keys(lapcof)
             if sum(j)<=N-1
-                w=lapcof[j]*length(multiset_permutations(j)) # orbit size of column j, applied once
+                w=lapcof[j]*length(multiset_permutations(j))
                 for part_i in eachindex(j)
                     w *= diag_11[j[part_i]+1]
                 end
@@ -62,11 +62,9 @@ function ConvMatInvar(N::Int, dim::Int)
     sparse(I, J, V, n_len, n_len)
 end
 
-((ConvMatInvar(3,3)))
-
 dims=[3,5,6,7]
 
-N=ones(Int,length(dims)).*25
+N=ones(Int,length(dims)).*30
 
 fig=Figure()
 
@@ -85,15 +83,15 @@ for i in eachindex(dims)
     u1=u1/norm(u1)
     aux=1
     u_deg=Float64[]
-    for j= round(Int,dim*(dim-1)/2):(N[i]-1)
-        len=length(Partition_diff_n_parts(j,dim))
+    for j= 1:(N[i]-1)
+        len=length(Partition_n_parts(j,dim))
         val=norm(u1[aux:aux+len-1])
         if val !=0.0
             append!(u_deg,val)
         end
         aux=aux+len
     end
-    exactlam = -(pi^2/4)*sum([i^2 for i in 1:dim])
+    exactlam = -dim*(pi^2/4)
     println("Error dim=$dim: $(abs(λ1-exactlam))")
     #ylims!(extrema(abs.(u_deg))[1]+2.2e-16,extrema(abs.(u_deg))[2])
     scatter!(ax,1:length(u_deg),abs.(u_deg),label="dim=$(dims[i])")

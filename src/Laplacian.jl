@@ -206,6 +206,19 @@ function laplacianCoeffsAlter(α::Vector{Int}, normalized::Bool = false)
     buckets
 end
 
+function convCoeffsAlter(α)
+    d = length(α); b = Dict{Vector{Int},Float64}()
+    for k in Iterators.product(ntuple(_ -> -1:1, d)...)
+        mu = [α[i] + 2k[i] for i = 1:d]
+        (all(>=(0), mu) && allunique(mu)) || continue
+        p = sortperm(mu, rev=true)
+        sig = levicivita(invperm(sortperm(p)))
+        b[mu[p]] = get(b, mu[p], 0.0) + sig * prod(s(k[i], α[i]) for i = 1:d)
+    end
+    b
+end
+
+
 function TensorEval(α::Vector{Int},X::Vector{Float64}, neg::Bool)
     if neg
         C=Ultraspherical(-0.5)[:,3:end]
@@ -334,7 +347,7 @@ function LaplacianMat(N::Int, dim::Int)
         lapcof=laplacianCoeffs(parts[i])
         for j in keys(lapcof)
             if sum(j)<=N-1
-                w=lapcof[j]
+                w=lapcof[j]*length(multiset_permutations(j)) # orbit size of column j, applied once
                 for part_i in eachindex(j)
                     w *= diag_11[j[part_i]+1]
                 end

@@ -59,7 +59,8 @@ export getLaplacianClosedForm,
     partitionToInvariantEval,
     partitionToInvariantFunction,
     makeDictInd,
-    LaplacianMat
+    LaplacianMat,
+    convCoeffsAlter
 
 export cubeperm_inds
 

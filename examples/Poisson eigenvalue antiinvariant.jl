@@ -82,41 +82,43 @@ end
 
 f(n)=round(Int,n*(n-1)/2)
 
-dims=[4,5,6,7]
+function ConvergenceAnti(dims, N_true)
+    N=map(f, dims).+N_true
 
-N_true=31
+    fig=Figure()
+    mark=[:circle, :utriangle, :rect, :hexagon]
+    ax=Axis(fig[1,1]; xlabel="Degree", ylabel="Coefficient magnitude",yscale=log10, title=L"Magnitude of coefficients per total degree $- \ \frac{d(d-1)}{2}$: Fermion case")
 
-N=map(f, dims).+N_true
+    for i in eachindex(dims)
+        dim=dims[i]
+        S=sparse(LaplacianMatAnti(N[i], dim)')
+        M=sparse(ConvMatAnti(N[i], dim)')
 
-fig=Figure()
-
-mark=[:circle, :utriangle, :rect, :hexagon]
-
-ax=Axis(fig[1,1]; xlabel="Degree", ylabel="Coefficient magnitude",yscale=log10, title="Magnitude of coefficients per total degree: Fermion case")
-
-for i in eachindex(dims)
-    dim=dims[i]
-    S=sparse(LaplacianMatAnti(N[i], dim)')
-    M=sparse(ConvMatAnti(N[i], dim)')
-
-    λ1, u1 = lowest_eig(S, M)
-    u1/=norm(u1)
-    aux=1
-    degs=round(Int,dim*(dim-1)/2):(N[i]-1)
-    u_deg=Float64[]
-    for j in degs
-        len=length(Partition_diff_n_parts(j,dim))
-        append!(u_deg,norm(u1[aux:aux+len-1]))
-        aux=aux+len
+        λ1, u1 = lowest_eig(S, M)
+        u1/=norm(u1)
+        aux=1
+        degs=round(Int,dim*(dim-1)/2):(N[i]-1)
+        u_deg=Float64[]
+        for j in degs
+            len=length(Partition_diff_n_parts(j,dim))
+            append!(u_deg,norm(u1[aux:aux+len-1]))
+            aux=aux+len
+        end
+        exactlam = -(pi^2/4)*sum([i^2 for i in 1:dim])
+        println("Error dim=$dim: $(abs(λ1-exactlam))")
+        #ylims!(extrema(abs.(u_deg))[1]+2.2e-16,extrema(abs.(u_deg))[2])
+        # keep every degree, but only plot the non-negligible ones, at their true position
+        keep=u_deg .> 1e-17
+        xs=(0:length(u_deg)-1)[keep]
+        scatterlines!(ax,xs,u_deg[keep]; marker=mark[i], label="dim=$(dims[i])", strokewidth=1, strokecolor=:black)
     end
-    exactlam = -(pi^2/4)*sum([i^2 for i in 1:dim])
-    println("Error dim=$dim: $(abs(λ1-exactlam))")
-    #ylims!(extrema(abs.(u_deg))[1]+2.2e-16,extrema(abs.(u_deg))[2])
-    # keep every degree, but only plot the non-negligible ones, at their true position
-    keep=u_deg .> 1e-15
-    xs=(0:length(u_deg)-1)[keep]
-    scatterlines!(ax,xs,u_deg[keep]; marker=mark[i], label="dim=$(dims[i])", strokewidth=1, strokecolor=:black)
+    axislegend(ax, position=:lb)
+    fig
 end
-axislegend(ax, position=:lb)
-save("poisson eigenvalue anti-invariant.pdf",fig)
-fig
+
+
+N_true=18
+N=N_true+f(7)
+
+dims=[4,5,6,7]
+ConvergenceAnti(dims, map(f,dims).+41)

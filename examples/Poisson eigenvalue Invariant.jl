@@ -1,5 +1,4 @@
-using SymmetricOrthogonalPolynomials, SparseArrays, Arpack, LinearAlgebra, CairoMakie, Combinatorics
-import Arpack:eigs
+using SymmetricOrthogonalPolynomials, SparseArrays, LinearAlgebra, CairoMakie, Combinatorics
 
 splus1(n::Int) = -1 / ((2n + 3) * (2n + 5))
 s0(n::Int) = 2 / ((2n + 1) * (2n + 5))
@@ -86,41 +85,42 @@ function lowest_eig(S, M; tol=1e-12, maxit=1000)
     lam, v
 end
 
-dims=[4,5,6,7]
 
-N=ones(Int,length(dims)).*31
+function Convergence(dims, N)
+    N=ones(Int,length(dims)).*N
+    fig=Figure()
 
-fig=Figure()
+    mark=[:circle, :utriangle, :rect, :hexagon]
+    ax=Axis(fig[1,1]; xlabel="Degree", ylabel="Coefficient magnitude",yscale=log10, title="Magnitude of coefficients per total degree: Boson case")
+    for i in eachindex(dims)
+        
+        dim=dims[i]
 
-mark=[:circle, :utriangle, :rect, :hexagon]
-ax=Axis(fig[1,1]; xlabel="Degree", ylabel="Coefficient magnitude",yscale=log10, title="Magnitude of coefficients per total degree: Boson case")
-for i in eachindex(dims)
-    
-    dim=dims[i]
+        S=LaplacianMat(N[i], dim)
+        M= ConvMatInvar(N[i], dim)
 
-    S=LaplacianMat(N[i], dim)
-    M= ConvMatInvar(N[i], dim)
+        λ1, u1=lowest_eig(S,M)
+        u1/=norm(u1)
 
-    λ1, u1=lowest_eig(S,M)
-    u1/=norm(u1)
+        aux = 1
+        u_deg = Float64[]
+        for j = 0:(N[i]-1)
+            len = length(Partition_n_parts(j, dim))
+            append!(u_deg, norm(u1[aux:aux+len-1]))
+            aux += len
+        end
+        exactlam = -dim*(pi^2/4)
+        println("Error dim=$dim: $(abs(λ1-exactlam))")
 
-    aux = 1
-    u_deg = Float64[]
-    for j = 0:(N[i]-1)
-        len = length(Partition_n_parts(j, dim))
-        append!(u_deg, norm(u1[aux:aux+len-1]))
-        aux += len
+        keep=u_deg .> 1e-17
+        xs=(0:length(u_deg)-1)[keep]
+        scatterlines!(ax,xs,u_deg[keep];label="dim=$(dims[i])",marker=mark[i], strokewidth=1, strokecolor=:black)
     end
-    exactlam = -dim*(pi^2/4)
-    println("Error dim=$dim: $(abs(λ1-exactlam))")
-
-    keep=u_deg .> 1e-16
-    xs=(0:length(u_deg)-1)[keep]
-
-    ylims!(1e-16, 1)
-    scatterlines!(ax,xs,u_deg[keep];label="dim=$(dims[i])",marker=mark[i], strokewidth=1, strokecolor=:black)
+    axislegend(ax, position=:lb)
+    fig
 end
-axislegend(ax, position=:lb)
-save("poisson eigenvalue Invariant.pdf",fig)
-fig
+
+dims=[4,5,6,7]
+N=41
+Convergence(dims,N)
 

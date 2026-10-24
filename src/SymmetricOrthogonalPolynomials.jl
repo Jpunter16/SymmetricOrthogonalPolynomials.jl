@@ -62,6 +62,8 @@ export getLaplacianClosedForm,
     LaplacianMat,
     convCoeffsAlter
 
+export JacobiOperatorE1
+
 export cubeperm_inds
 
 include("dihedral.jl")

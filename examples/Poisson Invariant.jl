@@ -143,7 +143,7 @@ function ConvergencePlot(dims::Vector{Int}, N::Int)
         println(err[end])
         aux+=1
     end
-    lines!(ax, [0, degm+1], [2.22e-16, 2.22e-16]; label="Machine precission threshold")
+    #lines!(ax, [0, degm+1], [2.22e-16, 2.22e-16]; label="Machine precission threshold")
     CairoMakie.xlims!(ax, 0, degm+1)
     axislegend(ax, position=:lb)
     N=N-1
@@ -169,7 +169,7 @@ end
 function DofvsDegPlo(dims::Vector{Int}, N::Int)
     fig = Figure()
     ax = Axis(fig[1, 1]; xlabel="Polynomial degree", ylabel="Degrees of freedom",
-        yscale=log10, title="Degrees of freedom vs Degree of polynomial")
+        yscale=log10, title="Degrees of freedom vs Degree of polynomial: Boson case")
     mark=[:circle, :utriangle, :rect, :hexagon]
     aux=1
     for i in dims
@@ -179,8 +179,11 @@ function DofvsDegPlo(dims::Vector{Int}, N::Int)
     end
     CairoMakie.xlims!(ax, 0, N)
     axislegend(ax, position=:rb)
-    save("DofvsDeg Poisson.png", fig)
+    save("DofvsDeg Poisson Invariant.pdf", fig)
     fig
 end
-ConvergencePlot([3, 5, 8, 10], 30)
-#DofvsDegPlo([3,5,8,10],30)
+
+N=10
+dims=[4, 5, 6, 7]
+#ConvergencePlot(dims, 10)
+DofvsDegPlo(dims,41)

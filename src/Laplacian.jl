@@ -347,7 +347,7 @@ function LaplacianMat(N::Int, dim::Int)
         lapcof=laplacianCoeffs(parts[i])
         for j in keys(lapcof)
             if sum(j)<=N-1
-                w=lapcof[j]*length(multiset_permutations(j)) # orbit size of column j, applied once
+                w=lapcof[j]*orbitSize(j) # orbit size of column j, applied once
                 for part_i in eachindex(j)
                     w *= diag_11[j[part_i]+1]
                 end

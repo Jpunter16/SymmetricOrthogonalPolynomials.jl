@@ -122,20 +122,20 @@ function getU(N::Int, dim::Int)
     F=assembleF_det(N, dim)
     vec(A'\F)
 end
-
+f(n)=round(Int,n*(n-1)/2)
 function DOFforDegree(N::Int, dim::Int)
     dof=[0]
-    for i in 0:(N-1)
+    for i in f(dim):(N-1)
         part=Partition_diff_n_parts(i, dim)
         append!(dof, length(part)+dof[end])
     end
-    (0:(N-1), dof[2:end])
+    (0:(N-1-f(dim)), dof[2:end])
 end
 
 function DofvsDegPlo(dims::Vector{Int}, N::Vector{Int})
     fig = Figure()
     ax = Axis(fig[1, 1]; xlabel="Polynomial degree", ylabel="Degrees of freedom",
-        yscale=log10, title="Degrees of freedom vs Degree of polynomial")
+        yscale=log10, title=L"Degrees of freedom vs Polynomial degree $- \ \frac{d(d-1)}{2}$")
     mark=[:circle, :utriangle, :rect, :hexagon]
     aux=1
     for i in eachindex(dims)
@@ -143,11 +143,11 @@ function DofvsDegPlo(dims::Vector{Int}, N::Vector{Int})
         scatterlines!(ax, degr, dof; marker=mark[aux], label="dim=$(dims[i])", strokewidth=1, strokecolor=:black)
         aux+=1
     end
-    CairoMakie.xlims!(ax, 0, N[i])
+    #CairoMakie.xlims!(ax, 0, N[i])
     axislegend(ax, position=:rb)
-    save("DofvsDeg Poisson AntiInvariant.png", fig)
+    save("DofvsDeg Poisson AntiInvariant.pdf", fig)
     fig
 end
 
-dims=[3,4, 5,6]
-ConvergencePlot(dims,30*ones(Int,length(dims)))
+dims=[4,5,6,7]
+DofvsDegPlo(dims,map(f,dims).+41)

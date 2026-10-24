@@ -4,7 +4,6 @@
 
 gives the orthogonal transformation from tensor product to Dihedral symmetry-respecting basis.
 """
-
 dihedralQ(n) = dihedralQ(Float64, n)
 function dihedralQ(T, n)
     Q = zeros(T, n, n)
